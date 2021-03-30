@@ -154,3 +154,24 @@ def user_receive():
 # Create thread for user to receive broadcasts
 receive_broadcast = threading.Thread(target=user_receive)
 receive_broadcast.start()
+
+# Task 4: 4-A Show the devices attempting re-construction of EphID when these have received at least 3 shares.
+# Task 4: 4-B Show the devices verifying the re-constructed EphID by taking the hash of re-constructed EphID and comparing with the hash value received in the advertisement.
+
+# Task 5: 5-A Show the devices computing the shared secret EncID by using Diffie- Hellman key exchange mechanism.
+# Task 5: 5-B Show that the devices have arrived at the same EncID value.
+
+# Task 6: Show that the devices are encoding EncID into the DBF and deleting the EncID.
+
+# Task 7: 7-A Show that the devices are encoding multiple EncIDs into the same DBF and show the state of the DBF after each addition.
+# Task 7: 7-B Show that a new DBF gets created for the devices after every 10 minutes. A device can only store maximum of 6 DBFs.
+
+# Task 8: Show that after every 60 minutes, the devices combine all the available DBFs into a single QBF.
+
+# Task 9: 9-A Show that the devices send the QBF to the back-end server. For extension, the back-end server is your own centralised server.
+# Task 9: 9-B Show that the devices are able to receive the result of risk analysis back from the back-end server. Show the result for a successful as well as an unsuccessful match. For extension, the back-end server is your own centralised server.
+
+# Task 10: Show that a device can combine the available DBF into a CBF and upload the CBF to the back-end server. For extension, the back-end server is your own centralised server.
+
+# Task 11: 11-A Show that the device is able to establish a TCP connection with the centralised server and perform Tasks 9 and 10 successfully.
+# Task 11: 11-B Show the terminal for the back-end server performing the QBF-CBF matching operation for risk analysis.
