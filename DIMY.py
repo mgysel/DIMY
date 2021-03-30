@@ -1,8 +1,10 @@
+#! /usr/bin/env python3
+
 # EphID and Shamir Secret Sharing Mechanism
 from Crypto.Random import get_random_bytes
 from Crypto.Protocol.SecretSharing import Shamir
-from string import ascii_uppercase
 import hashlib
+
 
 # UDP Programming
 import socket
