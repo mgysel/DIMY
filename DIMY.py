@@ -232,9 +232,9 @@ tasks = [
 if __name__ == "__main__":
     task, empty = handle_args()
 
-    if len(task) == 1:
+    if type(task) is not int and len(task) == 1:
         task = task[0]
-    else:
+    elif type(task) is not int:
         for i in task:
             tasks[i]()
 
