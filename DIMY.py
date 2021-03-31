@@ -15,6 +15,9 @@ import binascii
 # Threading
 import threading
 
+server = None
+client = None
+
 # Task 1: Generate a 16-Byte Ephemeral ID (EphID) after every 1 minute.
 def genEphID():
     '''
@@ -89,6 +92,7 @@ def user_receive():
     '''
     User receives broadcast from another user
     '''
+    global shares
     shares = []
     hash_ephID = None
 
@@ -127,6 +131,8 @@ def user_receive():
             print(hash_ephID)
 
 def task3():
+    global server
+    global client
     ########## SENDER ##########
     # UDP socket programming references https://github.com/ninedraft/python-udp
 
