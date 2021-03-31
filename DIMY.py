@@ -251,13 +251,15 @@ if __name__ == "__main__":
         i = 0
         while i < task:
             tasks[i]()
+            i += 1
         # tasks[task - 1]()
     while True:
         try:
-            num = input("Enter number to run that task. EOF to end.")
+            num = input("Enter a number to run that task. EOF to end.")
             num = int(num)
             i = 0
             while i < num:
                 tasks[i]()
+                i += 1
         except EOFError:
             break
