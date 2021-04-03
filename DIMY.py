@@ -118,7 +118,8 @@ def add_share(rec_hash, rec_share):
     # shares = [
     #     {
     #         "hash": str,
-    #         "shares": [share1, share2, share3, etc.]
+    #         "shares": [share1, share2, share3, etc.],
+    #         "ephID": None
     #     }
     # ]
     global shares
@@ -142,7 +143,8 @@ def add_share(rec_hash, rec_share):
         shares.append(
             {
                 "hash": rec_hash,
-                "shares": [rec_share]
+                "shares": [rec_share],
+                "ephID": None
             }
         )
 
@@ -171,6 +173,17 @@ def reconstruct_eph_id(rec_hash):
             ephID = Shamir.combine(share['shares'])
     
     return ephID
+
+def add_eph_id_to_shares(rec_hash, rec_ephID):
+    '''
+    Adds ephID to global shares variable
+    After ephID is reconstructed
+    '''
+    global shares
+
+    for share in shares:
+        if share['hash'] == rec_hash:
+            share['ephID'] = rec_ephID
 
 def user_receive():
     '''
@@ -214,6 +227,10 @@ def user_receive():
             print(hashlib.sha256(ephID).hexdigest() == hash_ephID)
             print(hashlib.sha256(ephID))
             print(hash_ephID)
+
+            # Store ephID in shares variable
+            add_eph_id_to_shares(hash_ephID, ephID)
+            print(shares)
 
 def task3():
     global server
