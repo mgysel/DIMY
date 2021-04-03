@@ -110,6 +110,68 @@ def user_send(ephID):
         time.sleep(1)
 
 ########## RECEIVER ##########
+def add_share(rec_hash, rec_share):
+    '''
+    Adds a share (share_num, share_bytes) to the receiver's global shares variable
+    '''
+    # Shares data structure should look like:
+    # shares = [
+    #     {
+    #         "hash": str,
+    #         "shares": [share1, share2, share3, etc.]
+    #     }
+    # ]
+    global shares
+
+    print("********** INSIDE ADD_SHARE **********")
+    print(f"rec_hash: {rec_hash}")
+    print(f"rec_share: {rec_share}")
+
+    is_hash_in_shares = False
+
+    for share in shares:
+        # Check if hash is already in shares
+        if share['hash'] == rec_hash:
+            is_hash_in_shares = True
+            # If hash already in shares, append non-duplicate shares
+            if rec_share not in share['shares']:
+                share['shares'].append(rec_share)
+    
+    if not is_hash_in_shares:
+        # If hash not in shares, create new object with this share
+        shares.append(
+            {
+                "hash": rec_hash,
+                "shares": [rec_share]
+            }
+        )
+
+def has_k_shares(k, rec_hash):
+    '''
+    Determines if the receiver has enough of rec_hash shares 
+    to reconstruct the sender's EphID
+    '''
+    global shares
+
+    for share in shares:
+        if share['hash'] == rec_hash:
+            return len(share['shares']) >= k
+
+    return False
+
+def reconstruct_eph_id(rec_hash):
+    '''
+    Reconstructs a sender's ephID from the received shares
+    '''
+    global shares
+    ephID = None
+
+    for share in shares:
+        if share['hash'] == rec_hash:
+            ephID = Shamir.combine(share['shares'])
+    
+    return ephID
+
 def user_receive():
     '''
     User receives broadcast from another user
@@ -137,13 +199,14 @@ def user_receive():
         print("********** SHARE RECEIVED **********")
         print(share)
         
-        # If do not already have this share, add to shares
-        if share not in shares:
-            shares.append(share)
+        # Add to shares
+        add_share(hash_ephID, share)
+        print("********** SHARES DATA STRUCTURE **********")
+        print(shares)
 
         # If have atleast 3 shares, reconstruct EphID
-        if len(shares) >= 3:
-            ephID = Shamir.combine(shares)
+        if has_k_shares(3, hash_ephID):
+            ephID = reconstruct_eph_id(hash_ephID)
             print("Reconstructing")
             print(f"Reconstructed EphID: {ephID}")
 
