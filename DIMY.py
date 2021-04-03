@@ -12,20 +12,42 @@ import time
 
 import binascii
 
+#import ecdsa
+from ecdsa import ECDH, SECP128r1
+#from ecdh import ECDH
+
+
 # Threading
 import threading
 
 server = None
 client = None
 
+# Variable to hold shares along with hash of EphID
+
+
+
 # Task 1: Generate a 16-Byte Ephemeral ID (EphID) after every 1 minute.
+def compress(pubKey):
+    '''
+    Displays public key in hex format
+    '''
+    return hex(pubKey.x) + hex(pubKey.y % 2)[2:]
+
 def genEphID():
     '''
     Generates a 16-Byte Ephemeral ID
     Returns ephID
     '''
-    ephID = get_random_bytes(16)
+    ecdh = ECDH(curve=SECP128r1)
+    ecdh.generate_private_key()
+    public_key = ecdh.get_public_key()
+
+    ephID = public_key.to_string('compressed')[1:]
+
     print(f"Ephemeral ID: {ephID}")
+    print(f"Number of Bytes: {len(ephID)}")
+    
     return ephID
 
 ephID = None
@@ -83,7 +105,7 @@ def user_send(ephID):
         else:
             i = 0
 
-        # Send every second
+        # Send every 10 seconds
         # TODO - UPDATE TO 10 SECONDS, 1 SECOND BETTER FOR TESTING
         time.sleep(1)
 
