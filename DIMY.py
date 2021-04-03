@@ -28,12 +28,6 @@ client = None
 
 
 # Task 1: Generate a 16-Byte Ephemeral ID (EphID) after every 1 minute.
-def compress(pubKey):
-    '''
-    Displays public key in hex format
-    '''
-    return hex(pubKey.x) + hex(pubKey.y % 2)[2:]
-
 def genEphID():
     '''
     Generates a 16-Byte Ephemeral ID
@@ -56,6 +50,9 @@ def task1():
     global ephID
     ephID = genEphID()
 
+    print("********** Task 1: Show Generation of EphID **********")
+    print(f"EphID: {ephID}")
+
 # Task 2: Prepare n shares of the EphID by using k-out-of-n Shamir Secret Sharing mechanism. 
 # For this implementation, we use the values of k and n to be 3 and 6 respectively.
 def genShares(ephID):
@@ -64,7 +61,6 @@ def genShares(ephID):
     Returns list of 6 chunks
     '''
     shares = Shamir.split(3, 6, ephID)
-    print(f"Shares: {shares}")
     return shares
 
 shares = None
@@ -72,6 +68,10 @@ shares = None
 def task2():
     global shares
     shares = genShares(ephID)
+
+    print("********** Task 2: Show 6 Shares Generated **********")
+    print(f"Shares: {shares}")    
+
 
 # Task 3: Broadcast these n shares @ 1 unique share per 10 seconds. 
 # For this implementation, you do not need to implement the simultaneous advertisement of EphIDs proposed in the reference paper [1].
@@ -90,12 +90,11 @@ def user_send(ephID):
     i = 0
     while True:
         # Convert share to bytes
-        print("********** SHARES SENT **********")
-        print(f"SHARE NUMBER: {i}")
-        print(ephID_shares[i][1])
-        print(hash_ephID)
         share = (ephID_shares[i][0], binascii.hexlify(ephID_shares[i][1]), hash_ephID)
         share_bytes = str.encode(str(share))
+
+        print("********** Task 3A: Show Sending of Shares at Rate of 1 per 10 seconds over UDP **********")
+        print(f"Sending share: {share}")
 
         server.sendto(share_bytes, ('<broadcast>', 37025))
 
@@ -148,32 +147,6 @@ def add_share(rec_hash, rec_share):
             }
         )
 
-def has_k_shares(k, rec_hash):
-    '''
-    Determines if the receiver has enough of rec_hash shares 
-    to reconstruct the sender's EphID
-    '''
-    global shares
-
-    for share in shares:
-        if share['hash'] == rec_hash:
-            return len(share['shares']) >= k
-
-    return False
-
-def reconstruct_eph_id(rec_hash):
-    '''
-    Reconstructs a sender's ephID from the received shares
-    '''
-    global shares
-    ephID = None
-
-    for share in shares:
-        if share['hash'] == rec_hash:
-            ephID = Shamir.combine(share['shares'])
-    
-    return ephID
-
 def add_eph_id_to_shares(rec_hash, rec_ephID):
     '''
     Adds ephID to global shares variable
@@ -202,35 +175,25 @@ def user_receive():
         share_num = int(data_str.split(',')[0].replace("(", ""))
         share_hex = data_str.split(', b')[1].split(',')[0].replace(")", "").replace(" ", "").replace("'", "")
         hash_ephID = data_str.split(', b')[1].split(',')[1].replace(")", "").replace(" ", "").replace("'", "")
-        print("**** SHARE HEX *****")
-        print(share_hex)
-        print(hash_ephID)
-        print(type(hash_ephID))
+        # print("**** SHARE HEX *****")
+        # print(share_hex)
+        # print(hash_ephID)
+        # print(type(hash_ephID))
         share_bytes = binascii.unhexlify(share_hex)
         share = (share_num, share_bytes)
 
-        print("********** SHARE RECEIVED **********")
-        print(share)
+        print("********** Task 3B: Show the receiving of shares **********")
+        print(f"Received Share: {share}")
         
         # Add to shares
         add_share(hash_ephID, share)
-        print("********** SHARES DATA STRUCTURE **********")
-        print(shares)
+        # print("********** SHARES DATA STRUCTURE **********")
+        # print(shares)
+        print("********** Task 3C: Keeping track of shares received **********")
+        print(f"Num unique shares received from sender: {num_shares_received(hash_ephID)}")
 
-        # If have atleast 3 shares, reconstruct EphID
-        if has_k_shares(3, hash_ephID):
-            ephID = reconstruct_eph_id(hash_ephID)
-            print("Reconstructing")
-            print(f"Reconstructed EphID: {ephID}")
-
-            print("Is hash the same?")
-            print(hashlib.sha256(ephID).hexdigest() == hash_ephID)
-            print(hashlib.sha256(ephID))
-            print(hash_ephID)
-
-            # Store ephID in shares variable
-            add_eph_id_to_shares(hash_ephID, ephID)
-            print(shares)
+        # If have 3 shares, reconstruct ephID and check hash
+        task4(hash_ephID)
 
 def task3():
     global server
@@ -273,8 +236,77 @@ def task3():
 
 # Task 4: 4-A Show the devices attempting re-construction of EphID when these have received at least 3 shares.
 # Task 4: 4-B Show the devices verifying the re-constructed EphID by taking the hash of re-constructed EphID and comparing with the hash value received in the advertisement.
-def task4():
-    pass
+
+def num_shares_received(rec_hash):
+    '''
+    Determines number of unique shares received for a given hash of an EphID
+    '''
+    global shares
+
+    for share in shares:
+        if share['hash'] == rec_hash:
+            return len(share['shares'])
+
+    return 0
+
+def has_k_shares(k, rec_hash):
+    '''
+    Determines if the receiver has enough of rec_hash shares 
+    to reconstruct the sender's EphID
+    '''
+    global shares
+
+    for share in shares:
+        if share['hash'] == rec_hash:
+            return len(share['shares']) >= k
+
+    return False
+
+def reconstruct_eph_id(rec_hash):
+    '''
+    Reconstructs a sender's ephID from the received shares
+    '''
+    global shares
+    ephID = None
+
+    for share in shares:
+        if share['hash'] == rec_hash:
+            ephID = Shamir.combine(share['shares'])
+    
+    return ephID
+
+def verify_eph_id(ephID, hash_ephID):
+    '''
+    Verifies ephID by reconstructing the received hash of the ephID
+    Returns True if match, False otherwise
+    '''
+    return hashlib.sha256(ephID).hexdigest() == hash_ephID
+
+def task4(hash_ephID):
+    global shares
+
+    # Task 4: 4-A Show the devices attempting re-construction of EphID 
+    # when these have received at least 3 shares.
+    if has_k_shares(3, hash_ephID):
+        ephID = reconstruct_eph_id(hash_ephID)
+        print("********** Task 4A: Show devices attempting re-construction of EphID when received at least 3 shares **********")
+        print(f"Reconstructed EphID: {ephID}")
+
+        # Task 4: 4-B Show the devices verifying the re-constructed EphID by taking the hash of re-constructed EphID and 
+        # comparing with the hash value received in the advertisement.
+        print("********** Task 4B: Verifying re-constructed EphID **********")
+        print(f"Re-constructed EphID: {ephID}")
+        print(f"Hash of re-constructed EphID: {hashlib.sha256(ephID).hexdigest()}")
+        print(f"Received Hash of EphID: {hash_ephID}")
+        print(f"Do they match? {hashlib.sha256(ephID).hexdigest() == hash_ephID}")
+
+        # Store ephID in shares variable
+        add_eph_id_to_shares(hash_ephID, ephID)
+
+    
+
+
+
 
 # Task 5: 5-A Show the devices computing the shared secret EncID by using Diffie- Hellman key exchange mechanism.
 # Task 5: 5-B Show that the devices have arrived at the same EncID value.
