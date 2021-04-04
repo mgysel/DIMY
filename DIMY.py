@@ -13,7 +13,7 @@ import time
 import binascii
 
 #import ecdsa
-from ecdsa import ECDH, SECP128r1
+from ecdsa import ECDH, SECP128r1, VerifyingKey
 #from ecdh import ECDH
 
 
@@ -28,23 +28,27 @@ client = None
 
 
 # Task 1: Generate a 16-Byte Ephemeral ID (EphID) after every 1 minute.
+ecdh = None
 def genEphID():
     '''
     Generates a 16-Byte Ephemeral ID
     Returns ephID
     '''
+    global ecdh
+    
     ecdh = ECDH(curve=SECP128r1)
     ecdh.generate_private_key()
     public_key = ecdh.get_public_key()
 
     ephID = public_key.to_string('compressed')[1:]
-
+    print(f"public key: {public_key.to_string('compressed')}")
     print(f"Ephemeral ID: {ephID}")
     print(f"Number of Bytes: {len(ephID)}")
     
     return ephID
 
 ephID = None
+secret = None
 # Test
 def task1():
     global ephID
@@ -192,7 +196,7 @@ def user_receive():
         print("********** Task 3C: Keeping track of shares received **********")
         print(f"Num unique shares received from sender: {num_shares_received(hash_ephID)}")
 
-        # If have 3 shares, reconstruct ephID and check hash
+        # Task 4: If have 3 shares, reconstruct ephID and check hash
         task4(hash_ephID)
 
 def task3():
@@ -303,6 +307,9 @@ def task4(hash_ephID):
         # Store ephID in shares variable
         add_eph_id_to_shares(hash_ephID, ephID)
 
+        # Task 5
+        task5(ephID)
+
     
 
 
@@ -310,8 +317,32 @@ def task4(hash_ephID):
 
 # Task 5: 5-A Show the devices computing the shared secret EncID by using Diffie- Hellman key exchange mechanism.
 # Task 5: 5-B Show that the devices have arrived at the same EncID value.
-def task5():
-    pass
+encID = None
+
+def task5(ephID):
+    '''
+    Computes EncID for a given EphID
+    '''
+    global encID
+    global ecdh
+
+    # Need to add 2 or 3 to the beginning of EphID
+    ephID = bytes([2]) + ephID
+    print("********** TASK 5 EPH ID **********")
+    print(ephID)
+    print(type(ephID))
+    print(len(ephID))
+
+    #vk = VerifyingKey.from_string(bytearray(ephID), curve=SECP128r1)
+
+    ecdh.load_received_public_key_bytes(ephID)
+
+    encID = ecdh.generate_sharedsecret_bytes()
+
+    print("********** Task 5A: Show the devices computing the shared secret EncID **********")
+    print(encID)
+    
+
 
 # Task 6: Show that the devices are encoding EncID into the DBF and deleting the EncID.
 def task6():
