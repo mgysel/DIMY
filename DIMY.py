@@ -535,6 +535,9 @@ def task6(EncID=None):
     print(daily_bloom_filter)
     
     EncID = None
+    if not encID:
+        global encID
+        encID = None
 
 # Task 7: 7-A Show that the devices are encoding multiple EncIDs into the same DBF and show the state of the DBF after each addition.
 # Task 7: 7-B Show that a new DBF gets created for the devices after every 10 minutes. A device can only store maximum of 6 DBFs.
