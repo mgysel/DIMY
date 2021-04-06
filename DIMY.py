@@ -46,25 +46,27 @@ class BloomFilter(object):
             False Positive probability in decimal
         '''
         # False posible probability in decimal
-        self.fp_prob = fp_prob
+        self.fp_prob = fp_prob if fp_prob else 0.0000062
 
         # Size of bit array to use
-        self.size = self.get_size(items_count, fp_prob)
+        self.size = size if size else self.get_size(items_count, fp_prob)
 
         # number of hash functions to use
-        self.hash_count = self.get_hash_count(self.size, items_count)
+        self.hash_count = num_hashes if num_hashes else self.get_hash_count(self.size, items_count)
 
         # Bit array of given size
-        self.bit_array = bitarray(self.size)
+        self.bit_array = bitarray(size, initializer=0) if size else bitarray(self.size, initializer=0)
 
         # initialize all bits as 0
         self.bit_array.setall(0)
 
-    def add(self, item):
+    def add(self, item, debug=False):
         '''
         Add an item in the filter
         '''
         digests = []
+        if debug is True:
+            print("Changes: ", end="")
         for i in range(self.hash_count):
 
             # create digest for given item.
@@ -75,6 +77,9 @@ class BloomFilter(object):
 
             # set the bit True in bit_array
             self.bit_array[digest] = True
+            
+            if debug is True:
+                print(digest, end=" ")
 
     def check(self, item):
         '''
@@ -89,6 +94,26 @@ class BloomFilter(object):
                 # else there is probability that it exist
                 return False
         return True
+
+    def intersect(self, other_bloom_filter, inplace=False):
+        '''
+        Returns intersection/bitwise AND of the current and other_bloom_filter. inplace defaults to False. Not a true inplace operation. Just replaces the internal bitarray.
+        '''
+        # new_bit_array = bitarray(self.size)
+        new_bit_array = self.bit_array & other_bloom_filter
+        if inplace is True:
+            self.bit_array = new_bit_array
+        return new_bit_array
+
+    def union(self, other_bloom_filter, inplace=False):
+        '''
+        Returns union/bitwise OR of the current and other_bloom_filter. inplace defaults to False. Not a true inplace operation. Just replaces the internal bitarray.
+        '''
+        # new_bit_array = bitarray(self.size)
+        new_bit_array = self.bit_array | other_bloom_filter
+        if inplace is True:
+            self.bit_array = new_bit_array
+        return new_bit_array
 
     @classmethod
     def get_size(self, n, p):
@@ -118,6 +143,18 @@ class BloomFilter(object):
         '''
         k = (m/n) * math.log(2)
         return int(k)
+
+    def __and__(self, obj):
+        if isinstance(BloomFilter, obj):
+            return self.bit_array & obj.bit_array
+        else:
+            raise ValueError(f"{obj} not a {self}")
+
+    def __or__(self, obj):
+        if isinstance(BloomFilter, obj):
+            return self.bit_array | obj.bit_array
+        else:
+            raise ValueError(f"{obj} not a {self}")
 
 
 
