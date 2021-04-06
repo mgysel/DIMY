@@ -522,13 +522,12 @@ def task6(EncID=None):
     Show that the devices are encoding EncID into the DBF and deleting the EncID.
     '''
     print("********** TASK 6 **********")
-    # seed1 = getrandbits(32)
-    # seed2 = getrandbits(32)
-    # seed3 = getrandbits(32)
-    # ! May need to move this to global depending on how everything flows.
+    
+    # This exists to get the EncID because the generation of the EncID itself isn't a separate function. Basically, just in case.
     EncID = task5(genEphID())
+    
+    # ! May need to move this to global depending on how everything flows.
     # instantiates bloom filter with n=1000, m=800000 bits and a false positive rate of p=0.0000062, k=3 hashes
-    # * may need to decide filename. filename=""
     daily_bloom_filter = BloomFilter(size=800000, items_count=1000, fp_prob=0.0000062, num_hashes=3)
     
     daily_bloom_filter.add(EncID, debug=True)
