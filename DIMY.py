@@ -16,6 +16,12 @@ import binascii
 from ecdsa import ECDH, SECP128r1, VerifyingKey
 #from ecdh import ECDH
 
+# bloom filter library
+# from bloom_filter import BloomFilter
+# from pybloomfilter import BloomFilter
+import bitarray
+from Crypto.Random.random import getrandbits
+
 
 # Threading
 import threading
@@ -286,7 +292,7 @@ def verify_eph_id(ephID, hash_ephID):
     '''
     return hashlib.sha256(ephID).hexdigest() == hash_ephID
 
-def task4(hash_ephID):
+def task4(hash_ephID=None):
     global shares
 
     # Task 4: 4-A Show the devices attempting re-construction of EphID 
@@ -319,7 +325,7 @@ def task4(hash_ephID):
 # Task 5: 5-B Show that the devices have arrived at the same EncID value.
 encID = None
 
-def task5(ephID):
+def task5(ephID=None):
     '''
     Computes EncID for a given EphID
     '''
@@ -344,9 +350,28 @@ def task5(ephID):
     
 
 
+daily_bloom_filter = None
 # Task 6: Show that the devices are encoding EncID into the DBF and deleting the EncID.
-def task6():
-    pass
+def task6(EncID=None):
+    '''
+    Show that the devices are encoding EncID into the DBF and deleting the EncID.
+    '''
+    print("********** TASK 6 **********")
+    seed1 = getrandbits(32)
+    seed2 = getrandbits(32)
+    seed3 = getrandbits(32)
+    # ! May need to move this to global depending on how everything flows.
+    # instantiates bloom filter with n=1000, m=800000 bits and a false positive rate of p=0.0000062, k=2 hashes
+    # * may need to decide filename. filename=""
+    daily_bloom_filter = BloomFilter(capacity=1000, error_rate=0.0000062, hashseeds=[seed1, seed2, seed3])
+    print(daily_bloom_filter.capacity)
+    print("number bits: " + daily_bloom_filter.num_bits_m)
+    print("error rate: " + daily_bloom_filter.error_rate_p)
+    
+    daily_bloom_filter.add(EncID)
+    assert EncID in daily_bloom_filter is True
+    
+    EncID = None
 
 # Task 7: 7-A Show that the devices are encoding multiple EncIDs into the same DBF and show the state of the DBF after each addition.
 # Task 7: 7-B Show that a new DBF gets created for the devices after every 10 minutes. A device can only store maximum of 6 DBFs.
