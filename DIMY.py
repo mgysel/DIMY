@@ -522,6 +522,7 @@ def task6(EncID=None):
     Show that the devices are encoding EncID into the DBF and deleting the EncID.
     '''
     print("********** TASK 6 **********")
+    global daily_bloom_filter
     
     # This exists to get the EncID because the generation of the EncID itself isn't a separate function. Basically, just in case.
     EncID = task5(genEphID())
@@ -531,7 +532,7 @@ def task6(EncID=None):
     daily_bloom_filter = BloomFilter(size=800000, items_count=1000, fp_prob=0.0000062, num_hashes=3)
     
     daily_bloom_filter.add(EncID, debug=True)
-    # assert EncID in daily_bloom_filter is True
+    assert EncID in daily_bloom_filter is True
     print(daily_bloom_filter)
     
     EncID = None
@@ -542,7 +543,21 @@ def task6(EncID=None):
 # Task 7: 7-A Show that the devices are encoding multiple EncIDs into the same DBF and show the state of the DBF after each addition.
 # Task 7: 7-B Show that a new DBF gets created for the devices after every 10 minutes. A device can only store maximum of 6 DBFs.
 def task7():
-    pass
+    '''
+    Show that the devices are encoding multiple EncIDs into the same DBF and show the state of the DBF after each addition.
+    Show that a new DBF gets created for the devices after every 10 minutes. A device can only store maximum of 6 DBFs.
+    '''
+    start = time.time()
+    task6()
+    print(daily_bloom_filter)
+    while True:
+        EncID_list = []
+        for i in range(10):
+            EncID_list.append(task5(genEphID))
+            daily_bloom_filter.add(EncID_list[i], debug=True)
+        if time.time() > start + (60 * 10):
+            start = time.time()
+            daily_bloom_filter = BloomFilter(size=800000, items_count=1000, fp_prob=0.0000062, num_hashes=3)
 
 # Task 8: Show that after every 60 minutes, the devices combine all the available DBFs into a single QBF.
 def task8():
