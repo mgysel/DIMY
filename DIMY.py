@@ -145,12 +145,18 @@ class BloomFilter(object):
         return int(k)
 
     def __and__(self, obj):
+        '''
+        You shouldn't be using this. This is just to make it so that the class operates with Python's built in operators.
+        '''
         if isinstance(BloomFilter, obj):
             return self.bit_array & obj.bit_array
         else:
             raise ValueError(f"{obj} not a {self}")
 
     def __or__(self, obj):
+        '''
+        You shouldn't be using this. This is just to make it so that the class operates with Python's built in operators.
+        '''
         if isinstance(BloomFilter, obj):
             return self.bit_array | obj.bit_array
         else:
