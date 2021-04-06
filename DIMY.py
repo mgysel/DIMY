@@ -37,6 +37,8 @@ class BloomFilter(object):
     hash_count = None
     # m
     bit_array = None
+    
+    curr_num = 0
 
     def __init__(self, size=800000, items_count=1000, fp_prob=0.0000062, num_hashes=3):
         '''
@@ -59,6 +61,8 @@ class BloomFilter(object):
 
         # initialize all bits as 0
         self.bit_array.setall(0)
+        
+        self.curr_num = 0
 
     def add(self, item, debug=False):
         '''
@@ -80,6 +84,8 @@ class BloomFilter(object):
             
             if debug is True:
                 print(digest, end=" ")
+        
+        self.curr_num += 1
 
     def check(self, item):
         '''
@@ -159,6 +165,24 @@ class BloomFilter(object):
         '''
         if isinstance(BloomFilter, obj):
             return self.bit_array | obj.bit_array
+        else:
+            raise ValueError(f"{obj} not a {self}")
+
+    def __str__(self):
+        '''
+        You shouldn't be using this. This is just to make it so that the class operates with Python's built in operators.
+        '''
+        if isinstance(BloomFilter, obj):
+            return self.bit_array
+        else:
+            raise ValueError(f"{obj} not a {self}")
+
+    def __eq__(self, obj):
+        '''
+        You shouldn't be using this. This is just to make it so that the class operates with Python's built in operators.
+        '''
+        if isinstance(BloomFilter, obj):
+            return self.bit_array == obj.bit_array
         else:
             raise ValueError(f"{obj} not a {self}")
 
@@ -498,19 +522,18 @@ def task6(EncID=None):
     Show that the devices are encoding EncID into the DBF and deleting the EncID.
     '''
     print("********** TASK 6 **********")
-    seed1 = getrandbits(32)
-    seed2 = getrandbits(32)
-    seed3 = getrandbits(32)
+    # seed1 = getrandbits(32)
+    # seed2 = getrandbits(32)
+    # seed3 = getrandbits(32)
     # ! May need to move this to global depending on how everything flows.
+    EncID = task5(genEphID())
     # instantiates bloom filter with n=1000, m=800000 bits and a false positive rate of p=0.0000062, k=3 hashes
     # * may need to decide filename. filename=""
-    daily_bloom_filter = bitarray.bitarray(800000)
-    print(daily_bloom_filter.capacity)
-    print("number bits: " + daily_bloom_filter.num_bits_m)
-    print("error rate: " + daily_bloom_filter.error_rate_p)
+    daily_bloom_filter = BloomFilter(size=800000, items_count=1000, fp_prob=0.0000062, num_hashes=3)
     
-    daily_bloom_filter.add(EncID)
-    assert EncID in daily_bloom_filter is True
+    daily_bloom_filter.add(EncID, debug=True)
+    # assert EncID in daily_bloom_filter is True
+    print(daily_bloom_filter)
     
     EncID = None
 
