@@ -311,33 +311,35 @@ def task4(hash_ephID):
         task5(ephID)
 
     
-
-
-
-
 # Task 5: 5-A Show the devices computing the shared secret EncID by using Diffie- Hellman key exchange mechanism.
 # Task 5: 5-B Show that the devices have arrived at the same EncID value.
 encID = None
 
-def task5(ephID):
+def construct_encID(ephID):
     '''
-    Computes EncID for a given EphID
+    Computes encID given an ephID
     '''
     global encID
     global ecdh
 
     # Need to add 2 or 3 to the beginning of EphID
     ephID = bytes([2]) + ephID
-    print("********** TASK 5 EPH ID **********")
-    print(ephID)
-    print(type(ephID))
-    print(len(ephID))
 
-    #vk = VerifyingKey.from_string(bytearray(ephID), curve=SECP128r1)
-
+    # Compute EncID
     ecdh.load_received_public_key_bytes(ephID)
-
     encID = ecdh.generate_sharedsecret_bytes()
+
+    return encID
+
+
+def task5(ephID):
+    '''
+    Computes EncID for a given EphID
+    '''
+
+    global encID
+
+    encID = construct_encID(ephID)
 
     print("********** Task 5A: Show the devices computing the shared secret EncID **********")
     print(encID)
