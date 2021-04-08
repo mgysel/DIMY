@@ -5,6 +5,8 @@ from Crypto.Random import get_random_bytes
 from Crypto.Protocol.SecretSharing import Shamir
 import hashlib
 
+import base64
+
 
 # UDP Programming
 import socket
@@ -16,6 +18,8 @@ import binascii
 from ecdsa import ECDH, SECP128r1, VerifyingKey
 #from ecdh import ECDH
 
+# API calls
+import requests
 
 # Threading
 import threading
@@ -366,11 +370,49 @@ def task9():
     Sends QBF to back-end server
     Receives results from back-end server
     '''
+    test_qbf = base64.b64encode(b"Test QBF")
+
+    url = 'http://ec2-3-25-246-159.ap-southeast-2.compute.amazonaws.com:9000/comp4337/qbf/query'
+    params = {
+        'QBF': test_qbf
+    }
+
+    print("********** Task 9A: Show the devices send the QBF to the back-end server **********")
+    print("Sending the following QBF to the following URL")
+    print(f"QBF: {test_qbf}")
+    print(f"URL: {url}")
+
+    response = requests.post(url=url, params=params)
+    data = response.json()
     
+    print("********** Task 9B: Show the devices are able to receive the result of the risk analysis **********")
+    print("********** Show the result for a successful as well as unsucessful match **********")
+    print(data)
+
 
 # Task 10: Show that a device can combine the available DBF into a CBF and upload the CBF to the back-end server. For extension, the back-end server is your own centralised server.
 def task10():
-    pass
+    '''
+    Device can combine available DBF into CBF
+    Device uploads the CBF to the backend server
+    '''
+    # TODO - Show that the devices can combine available DBF into CBF   
+    print("********** Task 9B: Show that the devices can combine available DBF into CBF and upload the CBF into the backend server **********")
+    test_cbf = base64.b64encode(b"Test CBF")
+
+    print(f"Combined DBF's into one CBF: {test_cbf}")
+
+    url = 'http://ec2-3-25-246-159.ap-southeast-2.compute.amazonaws.com:9000/comp4337/cbf/upload'
+    params = {
+        'CBF': test_cbf
+    }
+
+    print("Devices have uploaded CBF to backend server: ")
+    response = requests.post(url=url, params=params)
+    data = response.json()
+    print(data)
+
+
 
 # Task 11: 11-A Show that the device is able to establish a TCP connection with the centralised server and perform Tasks 9 and 10 successfully.
 # Task 11: 11-B Show the terminal for the back-end server performing the QBF-CBF matching operation for risk analysis.
@@ -389,7 +431,6 @@ def handle_args():
     args = parser.parse_args()
     
     return args.task, (args.port if args.port else None)
-
 
 tasks = [
     task1,
