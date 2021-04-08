@@ -191,8 +191,8 @@ def user_receive():
         
         # Add to shares
         add_share(hash_ephID, share)
-        # print("********** SHARES DATA STRUCTURE **********")
-        # print(shares)
+        print("********** SHARES DATA STRUCTURE **********")
+        print(shares)
         print("********** Task 3C: Keeping track of shares received **********")
         print(f"Num unique shares received from sender: {num_shares_received(hash_ephID)}")
 
@@ -362,7 +362,11 @@ def task8():
 # Task 9: 9-A Show that the devices send the QBF to the back-end server. For extension, the back-end server is your own centralised server.
 # Task 9: 9-B Show that the devices are able to receive the result of risk analysis back from the back-end server. Show the result for a successful as well as an unsuccessful match. For extension, the back-end server is your own centralised server.
 def task9():
-    pass
+    '''
+    Sends QBF to back-end server
+    Receives results from back-end server
+    '''
+    
 
 # Task 10: Show that a device can combine the available DBF into a CBF and upload the CBF to the back-end server. For extension, the back-end server is your own centralised server.
 def task10():
