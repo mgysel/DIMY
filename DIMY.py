@@ -607,12 +607,14 @@ def task7():
             DBF_list.append(daily_bloom_filter)
 
 # Task 8: Show that after every 60 minutes, the devices combine all the available DBFs into a single QBF.
-qbf = ""
+qbf = None
 def task8():
+    global qbf
     while True:
         # NTS: Need more clarification.
+        qbf = BloomFilter()
         for dbf in DBF_list:
-            qbf += dbf.serialise()
+            qbf.union(dbf, inplace=True)
         # time.sleep(60 * 60)
         time.sleep(6 * 1)
 
