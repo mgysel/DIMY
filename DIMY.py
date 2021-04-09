@@ -562,7 +562,7 @@ def task6(EncID=None):
     global daily_bloom_filter
     
     # This exists to get the EncID because the generation of the EncID itself isn't a separate function. Basically, just in case.
-    EncID = task5(genEphID())
+    EncID = construct_encID(ephID)
     
     # ! May need to move this to global depending on how everything flows.
     # instantiates bloom filter with n=1000, m=800000 bits and a false positive rate of p=0.0000062, k=3 hashes
@@ -579,26 +579,42 @@ def task6(EncID=None):
 
 # Task 7: 7-A Show that the devices are encoding multiple EncIDs into the same DBF and show the state of the DBF after each addition.
 # Task 7: 7-B Show that a new DBF gets created for the devices after every 10 minutes. A device can only store maximum of 6 DBFs.
+DBF_list = []
 def task7():
     '''
     Show that the devices are encoding multiple EncIDs into the same DBF and show the state of the DBF after each addition.
     Show that a new DBF gets created for the devices after every 10 minutes. A device can only store maximum of 6 DBFs.
     '''
-    start = time.time()
+    # start = time.time()
     task6()
     print(daily_bloom_filter)
+    # This should cover 7-A
     while True:
         EncID_list = []
         for i in range(10):
             EncID_list.append(task5(genEphID))
             daily_bloom_filter.add(EncID_list[i], debug=True)
-        if time.time() > start + (60 * 10):
-            start = time.time()
-            daily_bloom_filter = BloomFilter(size=800000, items_count=1000, fp_prob=0.0000062, num_hashes=3)
+
+        # This should cover 7-B
+        # time.sleep(60 * 10)
+        time.sleep(6 * 1)
+        daily_bloom_filter = BloomFilter(size=800000, items_count=1000, fp_prob=0.0000062, num_hashes=3)
+        # Maximum of 6 DBFs
+        if len(DBF_list) < 6:
+            DBF_list.append(daily_bloom_filter)
+        else:
+            DBF_list.pop(0)
+            DBF_list.append(daily_bloom_filter)
 
 # Task 8: Show that after every 60 minutes, the devices combine all the available DBFs into a single QBF.
+qbf = ""
 def task8():
-    pass
+    while True:
+        # NTS: Need more clarification.
+        for dbf in DBF_list:
+            qbf += dbf.serialise()
+        # time.sleep(60 * 60)
+        time.sleep(6 * 1)
 
 # Task 9: 9-A Show that the devices send the QBF to the back-end server. For extension, the back-end server is your own centralised server.
 # Task 9: 9-B Show that the devices are able to receive the result of risk analysis back from the back-end server. Show the result for a successful as well as an unsuccessful match. For extension, the back-end server is your own centralised server.
