@@ -185,6 +185,37 @@ class BloomFilter(object):
             return self.bit_array == obj.bit_array
         else:
             raise ValueError(f"{obj} not a {self}")
+    
+    @classmethod
+    def serialise(self, bit_array):
+        '''
+        Returns a base64-serialised, string version of itself.
+        '''
+        return bitarray.util.ba2base(64, bit_array)
+    
+    def serialise(self):
+        '''
+        Returns a base64-serialised, string version of itself.
+        '''
+        return bitarray.util.ba2base(64, self.bit_array)
+    
+    # NOTE: These probably won't be used.
+    # @classmethod
+    # def deserialise(self, base64_string):
+    #     '''
+    #     Returns a bit_array version of base64_string.
+    #     '''
+    #     return bitarray.util.base2ba(64, base64_string)
+
+    # @classmethod
+    # def deserialise2BloomFilter(self, base64_string):
+    #     '''
+    #     Returns a bloomfilter version of base64_string.
+    #     '''
+    #     return bitarray.util.base2ba(64, base64_string)
+    
+    def pprint(self):
+        bitarray.util.pprint(self.bit_array)
 
 
 
