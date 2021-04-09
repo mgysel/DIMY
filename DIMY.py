@@ -61,7 +61,8 @@ class BloomFilter(object):
         # number of hash functions to use
         self.hash_count = num_hashes if num_hashes else self.get_hash_count(self.size, items_count)
         
-        self.items_max = items_count if items_count else self.get_items_max(size, fp_prob)
+        # self.items_max = items_count if items_count else self.get_items_max(size, fp_prob)
+        self.items_max = items_count if items_count else 1000
 
         # Bit array of given size
         self.bit_array = bitarray(size, initializer=0) if size else bitarray(self.size, initializer=0)
@@ -161,19 +162,19 @@ class BloomFilter(object):
         k = (m/n) * math.log(2)
         return int(k)
     
-    @classmethod
-    def get_items_max(self, m, k):
-        '''
-        Return the maximum n that satisfies the formula
-        n = m * k
+    # @classmethod
+    # def get_items_max(self, m, k):
+    #     '''
+    #     Return the maximum n that satisfies the formula
+    #     n = m * k
 
-        m : int
-            size of bit array
-        k : int
-            probability of false positive
-        '''
-        n = m * k
-        return int(n)
+    #     m : int
+    #         size of bit array
+    #     k : int
+    #         probability of false positive
+    #     '''
+    #     n = m * k
+    #     return int(n)
 
     def __and__(self, obj):
         '''
