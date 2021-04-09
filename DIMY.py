@@ -33,13 +33,14 @@ class BloomFilter(object):
     '''
     Class for Bloom filter, using murmur3 hash function
     '''
-    # p
+    # p = probability of false positive
     fb_prob = None
-    # n
+    # n = expected maximum that achieves p
+    items_max = None
+    # m = Maximum size of array
     size = None
-    # k
+    # k = how many times to hash
     hash_count = None
-    # m
     bit_array = None
     
     curr_num = 0
@@ -59,6 +60,8 @@ class BloomFilter(object):
 
         # number of hash functions to use
         self.hash_count = num_hashes if num_hashes else self.get_hash_count(self.size, items_count)
+        
+        self.items_max = items_count if items_count else self.get_items_max(size, fp_prob)
 
         # Bit array of given size
         self.bit_array = bitarray(size, initializer=0) if size else bitarray(self.size, initializer=0)
@@ -105,22 +108,26 @@ class BloomFilter(object):
                 return False
         return True
 
-    def intersect(self, other_bloom_filter, inplace=False):
+    def intersect(self, other_bloom_filter, inplace=False, debug=False):
         '''
         Returns intersection/bitwise AND of the current and other_bloom_filter. inplace defaults to False. Not a true inplace operation. Just replaces the internal bitarray.
         '''
         # new_bit_array = bitarray(self.size)
         new_bit_array = self.bit_array & other_bloom_filter
+        if debug:
+            print(new_bit_array)
         if inplace is True:
             self.bit_array = new_bit_array
         return new_bit_array
 
-    def union(self, other_bloom_filter, inplace=False):
+    def union(self, other_bloom_filter, inplace=False, debug=False):
         '''
         Returns union/bitwise OR of the current and other_bloom_filter. inplace defaults to False. Not a true inplace operation. Just replaces the internal bitarray.
         '''
         # new_bit_array = bitarray(self.size)
         new_bit_array = self.bit_array | other_bloom_filter
+        if debug:
+            print(new_bit_array)
         if inplace is True:
             self.bit_array = new_bit_array
         return new_bit_array
@@ -128,7 +135,7 @@ class BloomFilter(object):
     @classmethod
     def get_size(self, n, p):
         '''
-        Return the size of bit array(m) to used using
+        Return the size of bit array(m) to use using
         following formula
         m = -(n * lg(p)) / (lg(2)^2)
         n : int
@@ -142,7 +149,7 @@ class BloomFilter(object):
     @classmethod
     def get_hash_count(self, m, n):
         '''
-        Return the hash function(k) to be used using
+        Return the hash function(k) to be use using
         following formula
         k = (m/n) * lg(2)
 
@@ -153,6 +160,20 @@ class BloomFilter(object):
         '''
         k = (m/n) * math.log(2)
         return int(k)
+    
+    @classmethod
+    def get_items_max(self, m, k):
+        '''
+        Return the maximum n that satisfies the formula
+        n = m * k
+
+        m : int
+            size of bit array
+        k : int
+            probability of false positive
+        '''
+        n = m * k
+        return int(n)
 
     def __and__(self, obj):
         '''
@@ -220,6 +241,9 @@ class BloomFilter(object):
     
     def pprint(self):
         bitarray.util.pprint(self.bit_array)
+    
+    def print(self):
+        print(self)
 
 
 
@@ -580,6 +604,33 @@ def task6(EncID=None):
 # Task 7: 7-A Show that the devices are encoding multiple EncIDs into the same DBF and show the state of the DBF after each addition.
 # Task 7: 7-B Show that a new DBF gets created for the devices after every 10 minutes. A device can only store maximum of 6 DBFs.
 DBF_list = []
+def list_EncID_to_DBF(DBF=None, EncID_list=None):
+    global daily_bloom_filter
+    if DBF:
+        daily_bloom_filter = DBF
+    for encid in EncID_list:
+        daily_bloom_filter.add(encid, debug=True)
+
+def stored_DBFs_checker():
+    global DBF_list
+
+    while True:
+        if len(DBF_list) < 6:
+            DBF_list.append(daily_bloom_filter)
+        else:
+            DBF_list.pop(0)
+            DBF_list.append(daily_bloom_filter)
+
+def erase_stored_DBFs():
+    global DBF_list
+    DBF_list = []
+
+def new_DBF_timer(period=60*10):
+    global daily_bloom_filter
+    while True:
+        daily_bloom_filter = BloomFilter(size=800000, items_count=1000, fp_prob=0.0000062, num_hashes=3)
+        time.sleep(period)
+
 def task7():
     '''
     Show that the devices are encoding multiple EncIDs into the same DBF and show the state of the DBF after each addition.
@@ -593,29 +644,36 @@ def task7():
         EncID_list = []
         for i in range(10):
             EncID_list.append(task5(genEphID))
-            daily_bloom_filter.add(EncID_list[i], debug=True)
+        list_EncID_to_DBF(EncID_list=EncID_list)
 
-        # This should cover 7-B
-        # time.sleep(60 * 10)
-        time.sleep(6 * 1)
-        daily_bloom_filter = BloomFilter(size=800000, items_count=1000, fp_prob=0.0000062, num_hashes=3)
-        # Maximum of 6 DBFs
-        if len(DBF_list) < 6:
-            DBF_list.append(daily_bloom_filter)
-        else:
-            DBF_list.pop(0)
-            DBF_list.append(daily_bloom_filter)
+# This needs more experimentation.
+    # This should cover 7-B
+    dbf_timer_thread = threading.Thread(target=new_DBF_timer)
+    dbf_timer_thread.start()
+    # Maximum of 6 DBFs
+    stored_dbf_thread = threading.Thread(target=stored_DBFs_checker)
+    stored_DBFs_checker().start()
 
 # Task 8: Show that after every 60 minutes, the devices combine all the available DBFs into a single QBF.
 qbf = None
+
+def combine_dbf_to_qbf(qbf=None, dbfs=None, debug=False):
+    qbf = BloomFilter() if not qbf else qbf
+    if not DBF_list:
+        DBF_list = dbfs
+    for dbf in DBF_list:
+        qbf.union(dbf, inplace=True, debug=True)
+        if debug:
+            print(qbf)
+    return qbf
+
 def task8():
     global qbf
     while True:
         # NTS: Need more clarification.
-        qbf = BloomFilter()
-        for dbf in DBF_list:
-            qbf.union(dbf, inplace=True)
+        qbf = combine_dbf_to_qbf()
         # time.sleep(60 * 60)
+        print(qbf)
         time.sleep(6 * 1)
 
 # Task 9: 9-A Show that the devices send the QBF to the back-end server. For extension, the back-end server is your own centralised server.
