@@ -65,7 +65,7 @@ class BloomFilter(object):
         self.items_max = items_count if items_count else 1000
 
         # Bit array of given size
-        self.bit_array = bitarray(size, initializer=0) if size else bitarray(self.size, initializer=0)
+        self.bit_array = bitarray.bitarray(size) if size else bitarray.bitarray(self.size)
 
         # initialize all bits as 0
         self.bit_array.setall(0)
@@ -99,15 +99,7 @@ class BloomFilter(object):
         '''
         Check for existence of an item in filter
         '''
-        for i in range(self.hash_count):
-            digest = mmh3.hash(item, i) % self.size
-            if self.bit_array[digest] == False:
-
-                # if any of bit is False then,its not present
-                # in filter
-                # else there is probability that it exist
-                return False
-        return True
+        return self.__contains__
 
     def intersect(self, other_bloom_filter, inplace=False, debug=False):
         '''
@@ -198,10 +190,7 @@ class BloomFilter(object):
         '''
         You shouldn't be using this. This is just to make it so that the class operates with Python's built in operators.
         '''
-        if isinstance(BloomFilter, obj):
-            return self.bit_array
-        else:
-            raise ValueError(f"{obj} not a {self}")
+        return self.bit_array.to01()
 
     def __eq__(self, obj):
         '''
@@ -211,6 +200,17 @@ class BloomFilter(object):
             return self.bit_array == obj.bit_array
         else:
             raise ValueError(f"{obj} not a {self}")
+    
+    def __contains__(self, item):
+        for i in range(self.hash_count):
+            digest = mmh3.hash(item, i) % self.size
+            if self.bit_array[digest] == False:
+
+                # if any of bit is False then,its not present
+                # in filter
+                # else there is probability that it exist
+                return False
+        return True
     
     @classmethod
     def serialise(self, bit_array):
@@ -563,7 +563,7 @@ def construct_encID(ephID):
     return encID
 
 
-def task5(ephID):
+def task5(ephID=ephID):
     '''
     Computes EncID for a given EphID
     '''
@@ -587,19 +587,19 @@ def task6(EncID=None):
     global daily_bloom_filter
     
     # This exists to get the EncID because the generation of the EncID itself isn't a separate function. Basically, just in case.
-    EncID = construct_encID(ephID)
+    EncID = construct_encID(genEphID())
     
     # ! May need to move this to global depending on how everything flows.
     # instantiates bloom filter with n=1000, m=800000 bits and a false positive rate of p=0.0000062, k=3 hashes
     daily_bloom_filter = BloomFilter(size=800000, items_count=1000, fp_prob=0.0000062, num_hashes=3)
     
     daily_bloom_filter.add(EncID, debug=True)
-    assert EncID in daily_bloom_filter is True
+    assert EncID in daily_bloom_filter
     print(daily_bloom_filter)
     
+    global encID
     EncID = None
     if not encID:
-        global encID
         encID = None
 
 # Task 7: 7-A Show that the devices are encoding multiple EncIDs into the same DBF and show the state of the DBF after each addition.
@@ -615,12 +615,12 @@ def list_EncID_to_DBF(DBF=None, EncID_list=None):
 def stored_DBFs_checker():
     global DBF_list
 
-    while True:
-        if len(DBF_list) < 6:
-            DBF_list.append(daily_bloom_filter)
-        else:
-            DBF_list.pop(0)
-            DBF_list.append(daily_bloom_filter)
+    if len(DBF_list) < 6:
+        DBF_list.append(daily_bloom_filter)
+    else:
+        DBF_list.pop(0)
+        DBF_list.append(daily_bloom_filter)
+    # print(len(DBF_list))
 
 def erase_stored_DBFs():
     global DBF_list
@@ -630,6 +630,8 @@ def new_DBF_timer(period=60*10):
     global daily_bloom_filter
     while True:
         daily_bloom_filter = BloomFilter(size=800000, items_count=1000, fp_prob=0.0000062, num_hashes=3)
+        # print(daily_bloom_filter)
+        stored_DBFs_checker()
         time.sleep(period)
 
 def task7():
@@ -639,21 +641,25 @@ def task7():
     '''
     # start = time.time()
     task6()
+    print("********** TASK 7 **********")
     print(daily_bloom_filter)
     # This should cover 7-A
-    while True:
-        EncID_list = []
-        for i in range(10):
-            EncID_list.append(task5(genEphID))
-        list_EncID_to_DBF(EncID_list=EncID_list)
+    # while True:
+    EncID_list = []
+    for i in range(10):
 
 # This needs more experimentation.
     # This should cover 7-B
-    dbf_timer_thread = threading.Thread(target=new_DBF_timer)
-    dbf_timer_thread.start()
+    dbf_timer_thread = threading.Thread(target=new_DBF_timer, kwargs=dict(period=0))
     # Maximum of 6 DBFs
-    stored_dbf_thread = threading.Thread(target=stored_DBFs_checker)
-    stored_DBFs_checker().start()
+    # stored_dbf_thread = threading.Thread(target=stored_DBFs_checker)
+    while True:
+        EncID_list.append(construct_encID(genEphID()))
+        list_EncID_to_DBF(EncID_list=EncID_list)
+        dbf_timer_thread.start()
+        # stored_DBFs_checker().start()
+        # time.sleep(60*10)
+        time.sleep(3)
 
 # Task 8: Show that after every 60 minutes, the devices combine all the available DBFs into a single QBF.
 qbf = None
@@ -670,12 +676,14 @@ def combine_dbf_to_qbf(qbf=None, dbfs=None, debug=False):
 
 def task8():
     global qbf
+    print("********** TASK 8 **********")
+    print("Show that after every 60 minutes, the devices combine all the available DBFs into a single QBF.")
     while True:
         # NTS: Need more clarification.
         qbf = combine_dbf_to_qbf()
-        # time.sleep(60 * 60)
         print(qbf)
-        time.sleep(6 * 1)
+        time.sleep(60 * 60)
+        # time.sleep(6 * 1)
 
 # Task 9: 9-A Show that the devices send the QBF to the back-end server. For extension, the back-end server is your own centralised server.
 # Task 9: 9-B Show that the devices are able to receive the result of risk analysis back from the back-end server. Show the result for a successful as well as an unsuccessful match. For extension, the back-end server is your own centralised server.
@@ -736,13 +744,33 @@ def task11():
 def task12():
     pass
 
+def run_interactive():
+    while True:
+        try:
+            num = input("Enter a number to run up to that task. Enter the function name to run only that function. EOF to end.\n")
+            try:
+                for i, f in enumerate(tasks):
+                    if num == f.__name__:
+                        f()
+            except:
+                num = int(num)
+                for i in range(num):
+                    tasks[i]()
+                    i += 1
+        except EOFError:
+            break
+
 def handle_args():
     import argparse
     parser = argparse.ArgumentParser(description="Runner script for DIMY assignment")
     parser.add_argument("task", type=int, nargs="*", default=99, help="Task number to run.")
     parser.add_argument("--port", "-p", type=int, action="store", nargs=2, help="Port number to run client/server on.")
+    parser.add_argument("--interactive", "-i", action="store_true", help="Determines whether to run the interactive mode or not.")
 
     args = parser.parse_args()
+
+    if args.interactive:
+        run_interactive()
     
     return args.task, (args.port if args.port else None)
 
@@ -779,13 +807,3 @@ if __name__ == "__main__":
             tasks[i]()
             i += 1
         # tasks[task - 1]()
-    while True:
-        try:
-            num = input("Enter a number to run that task. EOF to end.")
-            num = int(num)
-            i = 0
-            while i < num:
-                tasks[i]()
-                i += 1
-        except EOFError:
-            break
