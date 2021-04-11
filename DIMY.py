@@ -25,6 +25,7 @@ import bitarray
 import mmh3
 import math
 from Crypto.Random.random import getrandbits
+from random import randint
 
 import requests
 
@@ -191,6 +192,12 @@ class BloomFilter(object):
         You shouldn't be using this. This is just to make it so that the class operates with Python's built in operators.
         '''
         return self.bit_array.to01()
+    
+    # def __repr__(self):
+    #     '''
+    #     You shouldn't be using this. This is just to make it so that the class operates with Python's built in operators.
+    #     '''
+    #     return f""
 
     def __eq__(self, obj):
         '''
@@ -240,8 +247,8 @@ class BloomFilter(object):
     #     '''
     #     return bitarray.util.base2ba(64, base64_string)
     
-    def pprint(self):
-        bitarray.util.pprint(self.bit_array)
+    def toString(self):
+        return self.bit_array.to01()
     
     def print(self):
         print(self)
@@ -628,11 +635,11 @@ def erase_stored_DBFs():
 
 def new_DBF_timer(period=60*10):
     global daily_bloom_filter
-    while True:
-        daily_bloom_filter = BloomFilter(size=800000, items_count=1000, fp_prob=0.0000062, num_hashes=3)
-        # print(daily_bloom_filter)
-        stored_DBFs_checker()
-        time.sleep(period)
+    # while True:
+    stored_DBFs_checker()
+    daily_bloom_filter = BloomFilter(size=800000, items_count=1000, fp_prob=0.0000062, num_hashes=3)
+    # print(daily_bloom_filter)
+    # time.sleep(period)
 
 def task7():
     '''
@@ -642,24 +649,29 @@ def task7():
     # start = time.time()
     task6()
     print("********** TASK 7 **********")
-    print(daily_bloom_filter)
+    # print(daily_bloom_filter)
+    print(daily_bloom_filter.__repr__)
     # This should cover 7-A
     # while True:
-    EncID_list = []
-    for i in range(10):
+    # EncID_list = []
 
-# This needs more experimentation.
+# This needs more experimentation. I'm struggling to implement it as a thread for now. Not thinking it properly.
     # This should cover 7-B
-    dbf_timer_thread = threading.Thread(target=new_DBF_timer, kwargs=dict(period=0))
+    # dbf_timer_thread = threading.Thread(target=new_DBF_timer, kwargs=dict(period=0))
     # Maximum of 6 DBFs
     # stored_dbf_thread = threading.Thread(target=stored_DBFs_checker)
     while True:
-        EncID_list.append(construct_encID(genEphID()))
+        EncID_list = []
+        end = randint(1, 10)
+        for i in range(end):
+            EncID_list.append(construct_encID(genEphID()))
         list_EncID_to_DBF(EncID_list=EncID_list)
-        dbf_timer_thread.start()
+        # dbf_timer_thread.start()
         # stored_DBFs_checker().start()
         # time.sleep(60*10)
         time.sleep(3)
+        new_DBF_timer(0)
+        print(daily_bloom_filter.__repr__)
 
 # Task 8: Show that after every 60 minutes, the devices combine all the available DBFs into a single QBF.
 qbf = None
