@@ -107,9 +107,9 @@ class BloomFilter(object):
         Returns intersection/bitwise AND of the current and other_bloom_filter. inplace defaults to False. Not a true inplace operation. Just replaces the internal bitarray.
         '''
         # new_bit_array = bitarray(self.size)
-        new_bit_array = self.bit_array & other_bloom_filter
+        new_bit_array = self.bit_array & other_bloom_filter.bit_array
         if debug:
-            print(new_bit_array)
+            print(new_bit_array.__repr__)
         if inplace is True:
             self.bit_array = new_bit_array
         return new_bit_array
@@ -119,9 +119,9 @@ class BloomFilter(object):
         Returns union/bitwise OR of the current and other_bloom_filter. inplace defaults to False. Not a true inplace operation. Just replaces the internal bitarray.
         '''
         # new_bit_array = bitarray(self.size)
-        new_bit_array = self.bit_array | other_bloom_filter
+        new_bit_array = self.bit_array | other_bloom_filter.bit_array
         if debug:
-            print(new_bit_array)
+            print(new_bit_array.__repr__)
         if inplace is True:
             self.bit_array = new_bit_array
         return new_bit_array
@@ -633,7 +633,7 @@ def erase_stored_DBFs():
     global DBF_list
     DBF_list = []
 
-def new_DBF_timer(period=60*10):
+def new_DBF():
     global daily_bloom_filter
     # while True:
     stored_DBFs_checker()
@@ -651,51 +651,69 @@ def task7():
     print("********** TASK 7 **********")
     # print(daily_bloom_filter)
     print(daily_bloom_filter.__repr__)
-    # This should cover 7-A
-    # while True:
-    # EncID_list = []
 
 # This needs more experimentation. I'm struggling to implement it as a thread for now. Not thinking it properly.
-    # This should cover 7-B
+    # ! This will go unused until I work out how to work with it.
     # dbf_timer_thread = threading.Thread(target=new_DBF_timer, kwargs=dict(period=0))
     # Maximum of 6 DBFs
     # stored_dbf_thread = threading.Thread(target=stored_DBFs_checker)
+
     while True:
+# This should cover 7-A
         EncID_list = []
         end = randint(1, 10)
         for i in range(end):
             EncID_list.append(construct_encID(genEphID()))
         list_EncID_to_DBF(EncID_list=EncID_list)
+
+        # ! This will go unused until I work out how to work with it.
         # dbf_timer_thread.start()
         # stored_DBFs_checker().start()
+
+# This should cover 7-B
         # time.sleep(60*10)
         time.sleep(3)
-        new_DBF_timer(0)
+        new_DBF()
         print(daily_bloom_filter.__repr__)
+
+
+def one_day_passed():
+    global DBF_list
+    for i in range(10):
+        new_DBF()
+        EncID_list = []
+        end = randint(1, 10)
+        for i in range(end):
+            EncID_list.append(construct_encID(genEphID()))
+        list_EncID_to_DBF(EncID_list=EncID_list)
 
 # Task 8: Show that after every 60 minutes, the devices combine all the available DBFs into a single QBF.
 qbf = None
 
-def combine_dbf_to_qbf(qbf=None, dbfs=None, debug=False):
+def combine_dbf_to_qbf(qbf=None, dbfs=[], debug=False):
     qbf = BloomFilter() if not qbf else qbf
-    if not DBF_list:
-        DBF_list = dbfs
+    # if not DBF_list:
+    #     DBF_list = dbfs
     for dbf in DBF_list:
         qbf.union(dbf, inplace=True, debug=True)
         if debug:
-            print(qbf)
+            print(qbf.__repr__)
     return qbf
 
 def task8():
     global qbf
     print("********** TASK 8 **********")
     print("Show that after every 60 minutes, the devices combine all the available DBFs into a single QBF.")
+
+    # one_day_passed()
+
     while True:
         # NTS: Need more clarification.
+        one_day_passed()
         qbf = combine_dbf_to_qbf()
-        print(qbf)
-        time.sleep(60 * 60)
-        # time.sleep(6 * 1)
+        print(qbf.__repr__)
+        # time.sleep(60 * 60)
+        time.sleep(6 * 1)
 
 # Task 9: 9-A Show that the devices send the QBF to the back-end server. For extension, the back-end server is your own centralised server.
 # Task 9: 9-B Show that the devices are able to receive the result of risk analysis back from the back-end server. Show the result for a successful as well as an unsuccessful match. For extension, the back-end server is your own centralised server.
