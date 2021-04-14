@@ -19,7 +19,7 @@ python3 -m pip install --upgrade pip wheel
 python3 -m pip install -r requirements.txt
 ```
 
-If for some weird reason you want everything installed...
+If for some weird reason you want everything installed in your own user profile...
 
 ```bash
 python3 -m pip install --upgrade --user pip wheel
