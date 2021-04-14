@@ -18,8 +18,242 @@ import binascii
 from ecdsa import ECDH, SECP128r1, VerifyingKey
 #from ecdh import ECDH
 
-# API calls
+# bloom filter library
+# from bloom_filter import BloomFilter
+# from pybloomfilter import BloomFilter
+import bitarray
+import mmh3
+import math
+from Crypto.Random.random import getrandbits
+from random import randint
+
 import requests
+
+# Nicked the base from https://www.geeksforgeeks.org/bloom-filters-introduction-and-python-implementation/
+class BloomFilter(object):
+    '''
+    Class for Bloom filter, using murmur3 hash function
+    '''
+    # p = probability of false positive
+    fb_prob = None
+    # n = expected maximum that achieves p
+    items_max = None
+    # m = Maximum size of array
+    size = None
+    # k = how many times to hash
+    hash_count = None
+    bit_array = None
+    
+    curr_num = 0
+
+    def __init__(self, size=800000, items_count=1000, fp_prob=0.0000062, num_hashes=3):
+        '''
+        items_count : int
+            Number of items expected to be stored in bloom filter
+        fp_prob : float
+            False Positive probability in decimal
+        '''
+        # False posible probability in decimal
+        self.fp_prob = fp_prob if fp_prob else 0.0000062
+
+        # Size of bit array to use
+        self.size = size if size else self.get_size(items_count, fp_prob)
+
+        # number of hash functions to use
+        self.hash_count = num_hashes if num_hashes else self.get_hash_count(self.size, items_count)
+        
+        # self.items_max = items_count if items_count else self.get_items_max(size, fp_prob)
+        self.items_max = items_count if items_count else 1000
+
+        # Bit array of given size
+        self.bit_array = bitarray.bitarray(size) if size else bitarray.bitarray(self.size)
+
+        # initialize all bits as 0
+        self.bit_array.setall(0)
+        
+        self.curr_num = 0
+
+    def add(self, item, debug=False):
+        '''
+        Add an item in the filter
+        '''
+        digests = []
+        if debug is True:
+            print("Changes: ", end="")
+        for i in range(self.hash_count):
+
+            # create digest for given item.
+            # i work as seed to mmh3.hash() function
+            # With different seed, digest created is different
+            digest = mmh3.hash(item, i) % self.size
+            digests.append(digest)
+
+            # set the bit True in bit_array
+            self.bit_array[digest] = True
+            
+            if debug is True:
+                print(digest, end=" ")
+        
+        self.curr_num += 1
+
+    def check(self, item):
+        '''
+        Check for existence of an item in filter
+        '''
+        return self.__contains__
+
+    def intersect(self, other_bloom_filter, inplace=False, debug=False):
+        '''
+        Returns intersection/bitwise AND of the current and other_bloom_filter. inplace defaults to False. Not a true inplace operation. Just replaces the internal bitarray.
+        '''
+        # new_bit_array = bitarray(self.size)
+        new_bit_array = self.bit_array & other_bloom_filter.bit_array
+        if debug:
+            print(new_bit_array.__repr__)
+        if inplace is True:
+            self.bit_array = new_bit_array
+        return new_bit_array
+
+    def union(self, other_bloom_filter, inplace=False, debug=False):
+        '''
+        Returns union/bitwise OR of the current and other_bloom_filter. inplace defaults to False. Not a true inplace operation. Just replaces the internal bitarray.
+        '''
+        # new_bit_array = bitarray(self.size)
+        new_bit_array = self.bit_array | other_bloom_filter.bit_array
+        if debug:
+            print(new_bit_array.__repr__)
+        if inplace is True:
+            self.bit_array = new_bit_array
+        return new_bit_array
+
+    @classmethod
+    def get_size(self, n, p):
+        '''
+        Return the size of bit array(m) to use using
+        following formula
+        m = -(n * lg(p)) / (lg(2)^2)
+        n : int
+            number of items expected to be stored in filter
+        p : float
+            False Positive probability in decimal
+        '''
+        m = -(n * math.log(p))/(math.log(2)**2)
+        return int(m)
+
+    @classmethod
+    def get_hash_count(self, m, n):
+        '''
+        Return the hash function(k) to be use using
+        following formula
+        k = (m/n) * lg(2)
+
+        m : int
+            size of bit array
+        n : int
+            number of items expected to be stored in filter
+        '''
+        k = (m/n) * math.log(2)
+        return int(k)
+    
+    # @classmethod
+    # def get_items_max(self, m, k):
+    #     '''
+    #     Return the maximum n that satisfies the formula
+    #     n = m * k
+
+    #     m : int
+    #         size of bit array
+    #     k : int
+    #         probability of false positive
+    #     '''
+    #     n = m * k
+    #     return int(n)
+
+    def __and__(self, obj):
+        '''
+        You shouldn't be using this. This is just to make it so that the class operates with Python's built in operators.
+        '''
+        if isinstance(BloomFilter, obj):
+            return self.bit_array & obj.bit_array
+        else:
+            raise ValueError(f"{obj} not a {self}")
+
+    def __or__(self, obj):
+        '''
+        You shouldn't be using this. This is just to make it so that the class operates with Python's built in operators.
+        '''
+        if isinstance(BloomFilter, obj):
+            return self.bit_array | obj.bit_array
+        else:
+            raise ValueError(f"{obj} not a {self}")
+
+    def __str__(self):
+        '''
+        You shouldn't be using this. This is just to make it so that the class operates with Python's built in operators.
+        '''
+        return self.bit_array.to01()
+    
+    # def __repr__(self):
+    #     '''
+    #     You shouldn't be using this. This is just to make it so that the class operates with Python's built in operators.
+    #     '''
+    #     return f""
+
+    def __eq__(self, obj):
+        '''
+        You shouldn't be using this. This is just to make it so that the class operates with Python's built in operators.
+        '''
+        if isinstance(BloomFilter, obj):
+            return self.bit_array == obj.bit_array
+        else:
+            raise ValueError(f"{obj} not a {self}")
+    
+    def __contains__(self, item):
+        for i in range(self.hash_count):
+            digest = mmh3.hash(item, i) % self.size
+            if self.bit_array[digest] == False:
+
+                # if any of bit is False then,its not present
+                # in filter
+                # else there is probability that it exist
+                return False
+        return True
+    
+    @classmethod
+    def serialise(self, bit_array):
+        '''
+        Returns a base64-serialised, string version of itself.
+        '''
+        return bitarray.util.ba2base(64, bit_array)
+    
+    def serialise(self):
+        '''
+        Returns a base64-serialised, string version of itself.
+        '''
+        return bitarray.util.ba2base(64, self.bit_array)
+    
+    # NOTE: These probably won't be used.
+    # @classmethod
+    # def deserialise(self, base64_string):
+    #     '''
+    #     Returns a bit_array version of base64_string.
+    #     '''
+    #     return bitarray.util.base2ba(64, base64_string)
+
+    # @classmethod
+    # def deserialise2BloomFilter(self, base64_string):
+    #     '''
+    #     Returns a bloomfilter version of base64_string.
+    #     '''
+    #     return bitarray.util.base2ba(64, base64_string)
+    
+    def toString(self):
+        return self.bit_array.to01()
+    
+    def print(self):
+        print(self)
+
+
 
 # Threading
 import threading
@@ -290,7 +524,7 @@ def verify_eph_id(ephID, hash_ephID):
     '''
     return hashlib.sha256(ephID).hexdigest() == hash_ephID
 
-def task4(hash_ephID):
+def task4(hash_ephID=None):
     global shares
 
     # Task 4: 4-A Show the devices attempting re-construction of EphID 
@@ -336,7 +570,7 @@ def construct_encID(ephID):
     return encID
 
 
-def task5(ephID):
+def task5(ephID=ephID):
     '''
     Computes EncID for a given EphID
     '''
@@ -350,18 +584,136 @@ def task5(ephID):
     
 
 
+daily_bloom_filter = None
 # Task 6: Show that the devices are encoding EncID into the DBF and deleting the EncID.
-def task6():
-    pass
+def task6(EncID=None):
+    '''
+    Show that the devices are encoding EncID into the DBF and deleting the EncID.
+    '''
+    print("********** TASK 6 **********")
+    global daily_bloom_filter
+    
+    # This exists to get the EncID because the generation of the EncID itself isn't a separate function. Basically, just in case.
+    EncID = construct_encID(genEphID())
+    
+    # ! May need to move this to global depending on how everything flows.
+    # instantiates bloom filter with n=1000, m=800000 bits and a false positive rate of p=0.0000062, k=3 hashes
+    daily_bloom_filter = BloomFilter(size=800000, items_count=1000, fp_prob=0.0000062, num_hashes=3)
+    
+    daily_bloom_filter.add(EncID, debug=True)
+    assert EncID in daily_bloom_filter
+    print(daily_bloom_filter)
+    
+    global encID
+    EncID = None
+    if not encID:
+        encID = None
 
 # Task 7: 7-A Show that the devices are encoding multiple EncIDs into the same DBF and show the state of the DBF after each addition.
 # Task 7: 7-B Show that a new DBF gets created for the devices after every 10 minutes. A device can only store maximum of 6 DBFs.
+DBF_list = []
+def list_EncID_to_DBF(DBF=None, EncID_list=None):
+    global daily_bloom_filter
+    if DBF:
+        daily_bloom_filter = DBF
+    for encid in EncID_list:
+        daily_bloom_filter.add(encid, debug=True)
+
+def stored_DBFs_checker():
+    global DBF_list
+
+    if len(DBF_list) < 6:
+        DBF_list.append(daily_bloom_filter)
+    else:
+        DBF_list.pop(0)
+        DBF_list.append(daily_bloom_filter)
+    # print(len(DBF_list))
+
+def erase_stored_DBFs():
+    global DBF_list
+    DBF_list = []
+
+def new_DBF():
+    global daily_bloom_filter
+    # while True:
+    stored_DBFs_checker()
+    daily_bloom_filter = BloomFilter(size=800000, items_count=1000, fp_prob=0.0000062, num_hashes=3)
+    # print(daily_bloom_filter)
+    # time.sleep(period)
+
 def task7():
-    pass
+    '''
+    Show that the devices are encoding multiple EncIDs into the same DBF and show the state of the DBF after each addition.
+    Show that a new DBF gets created for the devices after every 10 minutes. A device can only store maximum of 6 DBFs.
+    '''
+    # start = time.time()
+    task6()
+    print("********** TASK 7 **********")
+    # print(daily_bloom_filter)
+    print(daily_bloom_filter.__repr__)
+
+# This needs more experimentation. I'm struggling to implement it as a thread for now. Not thinking it properly.
+    # ! This will go unused until I work out how to work with it.
+    # dbf_timer_thread = threading.Thread(target=new_DBF_timer, kwargs=dict(period=0))
+    # Maximum of 6 DBFs
+    # stored_dbf_thread = threading.Thread(target=stored_DBFs_checker)
+
+    while True:
+# This should cover 7-A
+        EncID_list = []
+        end = randint(1, 10)
+        for i in range(end):
+            EncID_list.append(construct_encID(genEphID()))
+        list_EncID_to_DBF(EncID_list=EncID_list)
+
+        # ! This will go unused until I work out how to work with it.
+        # dbf_timer_thread.start()
+        # stored_DBFs_checker().start()
+
+# This should cover 7-B
+        # time.sleep(60*10)
+        time.sleep(3)
+        new_DBF()
+        print(daily_bloom_filter.__repr__)
+
+
+def one_day_passed():
+    global DBF_list
+    for i in range(10):
+        new_DBF()
+        EncID_list = []
+        end = randint(1, 10)
+        for i in range(end):
+            EncID_list.append(construct_encID(genEphID()))
+        list_EncID_to_DBF(EncID_list=EncID_list)
 
 # Task 8: Show that after every 60 minutes, the devices combine all the available DBFs into a single QBF.
+qbf = None
+
+def combine_dbf_to_qbf(qbf=None, dbfs=[], debug=False):
+    qbf = BloomFilter() if not qbf else qbf
+    # if not DBF_list:
+    #     DBF_list = dbfs
+    for dbf in DBF_list:
+        qbf.union(dbf, inplace=True, debug=True)
+        if debug:
+            print(qbf.__repr__)
+    return qbf
+
 def task8():
-    pass
+    global qbf
+    print("********** TASK 8 **********")
+    print("Show that after every 60 minutes, the devices combine all the available DBFs into a single QBF.")
+
+    # one_day_passed()
+
+    while True:
+        # NTS: Need more clarification.
+        one_day_passed()
+        qbf = combine_dbf_to_qbf()
+        print(qbf.__repr__)
+        # time.sleep(60 * 60)
+        time.sleep(6 * 1)
 
 # Task 9: 9-A Show that the devices send the QBF to the back-end server. For extension, the back-end server is your own centralised server.
 # Task 9: 9-B Show that the devices are able to receive the result of risk analysis back from the back-end server. Show the result for a successful as well as an unsuccessful match. For extension, the back-end server is your own centralised server.
@@ -422,13 +774,33 @@ def task11():
 def task12():
     pass
 
+def run_interactive():
+    while True:
+        try:
+            num = input("Enter a number to run up to that task. Enter the function name to run only that function. EOF to end.\n")
+            try:
+                for i, f in enumerate(tasks):
+                    if num == f.__name__:
+                        f()
+            except:
+                num = int(num)
+                for i in range(num):
+                    tasks[i]()
+                    i += 1
+        except EOFError:
+            break
+
 def handle_args():
     import argparse
     parser = argparse.ArgumentParser(description="Runner script for DIMY assignment")
     parser.add_argument("task", type=int, nargs="*", default=99, help="Task number to run.")
     parser.add_argument("--port", "-p", type=int, action="store", nargs=2, help="Port number to run client/server on.")
+    parser.add_argument("--interactive", "-i", action="store_true", help="Determines whether to run the interactive mode or not.")
 
     args = parser.parse_args()
+
+    if args.interactive:
+        run_interactive()
     
     return args.task, (args.port if args.port else None)
 
@@ -465,13 +837,3 @@ if __name__ == "__main__":
             tasks[i]()
             i += 1
         # tasks[task - 1]()
-    while True:
-        try:
-            num = input("Enter a number to run that task. EOF to end.")
-            num = int(num)
-            i = 0
-            while i < num:
-                tasks[i]()
-                i += 1
-        except EOFError:
-            break
