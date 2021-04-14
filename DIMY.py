@@ -29,6 +29,330 @@ from random import randint
 
 import requests
 
+class DIMY:
+    '''
+    A simply way to keep all functions necessary for DIMY to function in one place. Also, so that the order of operations is not lost on me.
+    -William
+    '''
+    ecdh = None
+    ephID = None
+    secret = None
+    shares = None
+
+    daily_bloom_filter_list = None
+    daily_bloom_filter = None
+
+    query_bloom_filter = None
+    contact_bloom_filter = None
+
+    server = None
+    client = None
+
+    def __init__(self):
+        self.shares = []
+        self.daily_bloom_filter_list = []
+        self.ephID = genEphID()
+        new_DBF()
+
+    @classmethod
+    def genEphID(self):
+        '''
+        Generates a 16-Byte Ephemeral ID
+        Returns ephID
+        '''
+        
+        ecdh = ECDH(curve=SECP128r1)
+        ecdh.generate_private_key()
+        public_key = ecdh.get_public_key()
+
+        ephID = public_key.to_string('compressed')[1:]
+        print(f"public key: {public_key.to_string('compressed')}")
+        print(f"Ephemeral ID: {ephID}")
+        print(f"Number of Bytes: {len(ephID)}")
+        
+        return ephID
+
+    @classmethod
+    def genShares(self, ephID):
+        '''
+        Prepares 6 chunks of an ephemeral ID (ephID)
+        Returns list of 6 chunks
+        '''
+        shares = Shamir.split(3, 6, ephID)
+        return shares
+    
+    @classmethod
+    def user_send(self, ephID, wait_time=10):
+# UDP socket programming references https://github.com/ninedraft/python-udp
+        '''
+        User broadcasts one share of the EphID every 10 seconds to another user
+        '''
+        # Determine Hash of EphID
+        hash_ephID = hashlib.sha256(ephID).hexdigest()
+
+        # Determine shares of EphID
+        ephID_shares = genShares(ephID)
+
+        i = 0
+        while True:
+            # Convert share to bytes
+            share = (ephID_shares[i][0], binascii.hexlify(ephID_shares[i][1]), hash_ephID)
+            share_bytes = str.encode(str(share))
+
+            print("********** Task 3A: Show Sending of Shares at Rate of 1 per 10 seconds over UDP **********")
+            print(f"Sending share: {share}")
+
+            server.sendto(share_bytes, ('<broadcast>', 37025))
+
+            # Increment to next share
+            if (i < 5):
+                i += 1
+            else:
+                i = 0
+
+            # Send every 10 seconds
+            # TODO - UPDATE TO 10 SECONDS, 1 SECOND BETTER FOR TESTING
+            time.sleep(wait_time)
+
+    @classmethod
+    def add_share(self, rec_hash, rec_share):
+########## RECEIVER ##########
+        '''
+        Adds a share (share_num, share_bytes) to the receiver's global shares variable
+        '''
+        # Shares data structure should look like:
+        # shares = [
+        #     {
+        #         "hash": str,
+        #         "shares": [share1, share2, share3, etc.],
+        #         "ephID": None
+        #     }
+        # ]
+
+        print("********** INSIDE ADD_SHARE **********")
+        print(f"rec_hash: {rec_hash}")
+        print(f"rec_share: {rec_share}")
+
+        is_hash_in_shares = False
+
+        for share in shares:
+            # Check if hash is already in shares
+            if share['hash'] == rec_hash:
+                is_hash_in_shares = True
+                # If hash already in shares, append non-duplicate shares
+                if rec_share not in share['shares']:
+                    share['shares'].append(rec_share)
+        
+        if not is_hash_in_shares:
+            # If hash not in shares, create new object with this share
+            shares.append(
+                {
+                    "hash": rec_hash,
+                    "shares": [rec_share],
+                    "ephID": None
+                }
+            )
+
+    @classmethod
+    def add_eph_id_to_shares(self, rec_hash, rec_ephID):
+        '''
+        Adds ephID to global shares variable
+        After ephID is reconstructed
+        '''
+
+        for share in shares:
+            if share['hash'] == rec_hash:
+                share['ephID'] = rec_ephID
+
+    @classmethod
+    def user_receive(self):
+        '''
+        User receives broadcast from another user
+        '''
+        shares = []
+        hash_ephID = None
+
+        while True:
+            # Receive data
+            data, addr = client.recvfrom(1024)
+
+            # Convert data to (share number, share)
+            data_str = data.decode()
+            share_num = int(data_str.split(',')[0].replace("(", ""))
+            share_hex = data_str.split(', b')[1].split(',')[0].replace(")", "").replace(" ", "").replace("'", "")
+            hash_ephID = data_str.split(', b')[1].split(',')[1].replace(")", "").replace(" ", "").replace("'", "")
+            # print("**** SHARE HEX *****")
+            # print(share_hex)
+            # print(hash_ephID)
+            # print(type(hash_ephID))
+            share_bytes = binascii.unhexlify(share_hex)
+            share = (share_num, share_bytes)
+
+            print("********** Task 3B: Show the receiving of shares **********")
+            print(f"Received Share: {share}")
+            
+            # Add to shares
+            add_share(hash_ephID, share)
+            print("********** SHARES DATA STRUCTURE **********")
+            print(shares)
+            print("********** Task 3C: Keeping track of shares received **********")
+            print(f"Num unique shares received from sender: {num_shares_received(hash_ephID)}")
+
+            # Task 4: If have 3 shares, reconstruct ephID and check hash
+            task4(hash_ephID)
+
+    @classmethod
+    def num_shares_received(self, rec_hash):
+        '''
+        Determines number of unique shares received for a given hash of an EphID
+        '''
+
+        for share in shares:
+            if share['hash'] == rec_hash:
+                return len(share['shares'])
+
+        return 0
+
+    @classmethod
+    def has_k_shares(self, k, rec_hash):
+        '''
+        Determines if the receiver has enough of rec_hash shares 
+        to reconstruct the sender's EphID
+        '''
+
+        for share in shares:
+            if share['hash'] == rec_hash:
+                return len(share['shares']) >= k
+
+        return False
+
+    @classmethod
+    def reconstruct_eph_id(self, rec_hash):
+        '''
+        Reconstructs a sender's ephID from the received shares
+        '''
+        ephID = None
+
+        for share in shares:
+            if share['hash'] == rec_hash:
+                ephID = Shamir.combine(share['shares'])
+        
+        return ephID
+
+    @classmethod
+    def verify_eph_id(self, ephID, hash_ephID):
+        '''
+        Verifies ephID by reconstructing the received hash of the ephID
+        Returns True if match, False otherwise
+        '''
+        return hashlib.sha256(ephID).hexdigest() == hash_ephID
+
+    @classmethod
+    def construct_encID(self, ephID):
+        '''
+        Computes encID given an ephID
+        '''
+
+        # Need to add 2 or 3 to the beginning of EphID
+        ephID = bytes([2]) + ephID
+
+        # Compute EncID
+        ecdh.load_received_public_key_bytes(ephID)
+        encID = ecdh.generate_sharedsecret_bytes()
+
+        return encID
+
+    @classmethod
+    def list_EncID_to_DBF(self, EncID_list=None):
+        for encid in EncID_list:
+            daily_bloom_filter.add(encid, debug=True)
+
+    @classmethod
+    def stored_DBFs_checker(self):
+        if len(daily_bloom_filter_list) < 6:
+            daily_bloom_filter_list.append(daily_bloom_filter)
+        else:
+            temp = daily_bloom_filter_list.pop(0)
+            del temp
+            daily_bloom_filter_list.append(daily_bloom_filter)
+
+    @classmethod
+    def erase_stored_DBFs(self):
+        del daily_bloom_filter_list
+        daily_bloom_filter_list = []
+
+    @classmethod
+    def new_DBF(self):
+        stored_DBFs_checker()
+        self.daily_bloom_filter = BloomFilter(size=800000, items_count=1000, fp_prob=0.0000062, num_hashes=3)
+
+    @classmethod
+    def one_day_passed(self):
+        '''
+        Utility function to help with tests. Is supposed to represent a new day passing and thus new encounters.
+        '''
+        new_DBF()
+        EncID_list = []
+        end = randint(1, 100)
+        for i in range(end):
+            EncID_list.append(construct_encID(genEphID()))
+        list_EncID_to_DBF(EncID_list=EncID_list)
+
+    @classmethod
+    def merge_bloom_filters(self, debug=False):
+        """Alternatively: "create_qbf". Combines daily bloom filters into one query bloom filter.
+
+        Args:
+            debug (bool, optional): Determines whether to print debug message. Defaults to False.
+
+        Returns:
+            BloomFilter: The resulting bloom filter as a result of the union.
+        """
+        for dbf in daily_bloom_filter_list:
+            bf.union(dbf, inplace=True, debug=True)
+            if debug:
+                print(bf.__repr__)
+        return bf
+
+    @classmethod
+    def run_everything(self, num_times=1):
+        ########## SENDER ##########
+        # UDP socket programming references https://github.com/ninedraft/python-udp
+
+        # Create UDP socket for sender
+        server = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
+        # Enable port reusage so we can run multiple clients/servers on single (host/port)
+        server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+        # Enable broadcasting mode
+        server.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+
+        # Set a timeout so the socket does not block indefinitely when trying to receive data.
+        server.settimeout(0.2)
+        # Bind socket to localhost port 44444
+        server.bind(("", 44444))
+
+        # Create thread for user to broadcast chunks of the EphID
+        message = ephID
+        send_broadcast = threading.Thread(target=user_send, args=(ephID,))
+        send_broadcast.start()
+
+
+        ########## RECEIVER ##########
+
+        # Create UDP socket for receiver
+        client = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
+        # Enable port reusage so we will be able to run multiple clients and servers on single (host, port).
+        client.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+        # Enable broadcasting mode
+        client.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+        # Bind socket to localhost port 37024
+        client.bind(("", 37025))
+
+        # Create thread for user to receive broadcasts
+        receive_broadcast = threading.Thread(target=user_receive)
+        receive_broadcast.start()
+
+
 # Nicked the base from https://www.geeksforgeeks.org/bloom-filters-introduction-and-python-implementation/
 class BloomFilter(object):
     '''
@@ -611,7 +935,7 @@ def task6(EncID=None):
 
 # Task 7: 7-A Show that the devices are encoding multiple EncIDs into the same DBF and show the state of the DBF after each addition.
 # Task 7: 7-B Show that a new DBF gets created for the devices after every 10 minutes. A device can only store maximum of 6 DBFs.
-DBF_list = []
+daily_bloom_filter_list = []
 def list_EncID_to_DBF(DBF=None, EncID_list=None):
     global daily_bloom_filter
     if DBF:
@@ -620,18 +944,18 @@ def list_EncID_to_DBF(DBF=None, EncID_list=None):
         daily_bloom_filter.add(encid, debug=True)
 
 def stored_DBFs_checker():
-    global DBF_list
+    global daily_bloom_filter_list
 
-    if len(DBF_list) < 6:
-        DBF_list.append(daily_bloom_filter)
+    if len(daily_bloom_filter_list) < 6:
+        daily_bloom_filter_list.append(daily_bloom_filter)
     else:
-        DBF_list.pop(0)
-        DBF_list.append(daily_bloom_filter)
+        daily_bloom_filter_list.pop(0)
+        daily_bloom_filter_list.append(daily_bloom_filter)
     # print(len(DBF_list))
 
 def erase_stored_DBFs():
-    global DBF_list
-    DBF_list = []
+    global daily_bloom_filter_list
+    daily_bloom_filter_list = []
 
 def new_DBF():
     global daily_bloom_filter
@@ -678,7 +1002,7 @@ def task7():
 
 
 def one_day_passed():
-    global DBF_list
+    global daily_bloom_filter_list
     for i in range(10):
         new_DBF()
         EncID_list = []
@@ -688,20 +1012,20 @@ def one_day_passed():
         list_EncID_to_DBF(EncID_list=EncID_list)
 
 # Task 8: Show that after every 60 minutes, the devices combine all the available DBFs into a single QBF.
-qbf = None
+bf = None
 
 def combine_dbf_to_qbf(qbf=None, dbfs=[], debug=False):
     qbf = BloomFilter() if not qbf else qbf
     # if not DBF_list:
     #     DBF_list = dbfs
-    for dbf in DBF_list:
+    for dbf in daily_bloom_filter_list:
         qbf.union(dbf, inplace=True, debug=True)
         if debug:
             print(qbf.__repr__)
     return qbf
 
 def task8():
-    global qbf
+    global bf
     print("********** TASK 8 **********")
     print("Show that after every 60 minutes, the devices combine all the available DBFs into a single QBF.")
 
@@ -710,8 +1034,8 @@ def task8():
     while True:
         # NTS: Need more clarification.
         one_day_passed()
-        qbf = combine_dbf_to_qbf()
-        print(qbf.__repr__)
+        bf = combine_dbf_to_qbf()
+        print(bf.__repr__)
         # time.sleep(60 * 60)
         time.sleep(6 * 1)
 
