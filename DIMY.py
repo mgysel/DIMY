@@ -769,10 +769,30 @@ def task10():
 # Task 11: 11-A Show that the device is able to establish a TCP connection with the centralised server and perform Tasks 9 and 10 successfully.
 # Task 11: 11-B Show the terminal for the back-end server performing the QBF-CBF matching operation for risk analysis.
 def task11():
-    pass
+    base_url = 'http://127.0.0.1:2110'
 
-def task12():
-    pass
+    # Query QBF with centralized server
+    print("Task 11A: Querying centralized server with QBF")
+    test_qbf = 'test_qbf'
+    url = f"{base_url}/match"
+    data = {
+        'QBF': test_qbf
+    }
+    response = requests.post(url=url, json=data)
+    print("Result from the backend server: ")
+    data = response.json()
+    print(data['result'])
+
+    # Upload CBF to centralized server
+    print("Task 11A: Uploading CBF to centralized server")
+    url = f"{base_url}/upload"
+    test_cbf = 'test_cbf'
+    data = {
+        'CBF': test_cbf
+    }
+    requests.post(url=url, json=data)
+
+
 
 def run_interactive():
     while True:
@@ -816,7 +836,6 @@ tasks = [
     task9,
     task10,
     task11,
-    task12,
 ]
 
 if __name__ == "__main__":
