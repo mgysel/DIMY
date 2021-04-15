@@ -22,7 +22,7 @@ from ecdsa import ECDH, SECP128r1, VerifyingKey
 # from bloom_filter import BloomFilter
 # from pybloomfilter import BloomFilter
 import bitarray
-import bitarray.util
+import bitarray.util as bu
 import mmh3
 import math
 from Crypto.Random.random import getrandbits
@@ -220,6 +220,11 @@ class BloomFilter(object):
                 return False
         return True
     
+    bin_map = {
+        "A" = 0,
+        "E" = 1
+    }
+
     @classmethod
     def serialise(self, bit_array):
         '''
@@ -231,22 +236,27 @@ class BloomFilter(object):
         '''
         Returns a base64-serialised, string version of itself.
         '''
-        return bitarray.util.ba2base(64, self.bit_array)
+        i = 0
+        while len(self.bit_array) % 6 != 0:
+            self.bit_array.append(0)
+            i += 1
+        return bu.ba2base(64, self.bit_array)
+        # return base64.b64encode(self.bit_array.to01().decode())
+        # return bitarray.util.serialise(self.bit_array)
     
-    # NOTE: These probably won't be used.
-    # @classmethod
-    # def deserialise(self, base64_string):
-    #     '''
-    #     Returns a bit_array version of base64_string.
-    #     '''
-    #     return bitarray.util.base2ba(64, base64_string)
+    @classmethod
+    def deserialise(self, base64_string):
+        '''
+        Returns a bit_array version of base64_string.
+        '''
+        return bitarray.util.base2ba(64, base64_string)
 
-    # @classmethod
-    # def deserialise2BloomFilter(self, base64_string):
-    #     '''
-    #     Returns a bloomfilter version of base64_string.
-    #     '''
-    #     return bitarray.util.base2ba(64, base64_string)
+    @classmethod
+    def deserialise2BloomFilter(self, base64_string):
+        '''
+        Returns a bloomfilter version of base64_string.
+        '''
+        return bitarray.util.base2ba(64, base64_string)
     
     def toString(self):
         return self.bit_array.to01()
@@ -731,7 +741,11 @@ def task9():
     Sends QBF to back-end server
     Receives results from back-end server
     '''
-    test_qbf = base64.b64encode(b"Test QBF")
+    daily_bloom_filter = BloomFilter()
+    qbf = combine_dbf_to_qbf()
+    # test_qbf = base64.b64encode(b"Test QBF")
+    qbf = qbf.serialise()
+    print(qbf)
 
     url = 'http://ec2-3-25-246-159.ap-southeast-2.compute.amazonaws.com:9000/comp4337/qbf/query'
     params = {
