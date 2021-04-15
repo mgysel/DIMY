@@ -288,9 +288,12 @@ def genEphID():
         # print(f"public key: {public_key.to_string('compressed')}")
         # print(f"Ephemeral ID: {ephID}")
         # print(f"Number of Bytes: {len(ephID)}")
-        print("------------------> Segment 1 <------------------")
+        print("\n------------------> Segment 1 <------------------")
         print(f"generate EphID: {ephID}")
-        print(f"hash value of EphID: {hash_ephID}")
+        print(f"hash value of EphID: {hash_ephID}\n")
+
+        # Whenever new Ephemeral ID is created, create shares  of that Ephemeral ID
+        task2()
 
         time.sleep(60)
 
@@ -319,8 +322,15 @@ def task2():
     global shares
     shares = genShares(ephID)
 
-    print("********** Task 2: Show 6 Shares Generated **********")
-    print(f"Shares: {shares}")    
+    print("------------------> Segment 2 <------------------")
+    #print(f"Shares: {shares}")  
+    print("[")
+    for share in shares:
+        print(f"\t{share[1]}")
+    print("]")
+
+    task3()
+      
 
 
 # Task 3: Broadcast these n shares @ 1 unique share per 10 seconds. 
@@ -343,8 +353,10 @@ def user_send(ephID):
         share = (ephID_shares[i][0], binascii.hexlify(ephID_shares[i][1]), hash_ephID)
         share_bytes = str.encode(str(share))
 
-        print("********** Task 3A: Show Sending of Shares at Rate of 1 per 10 seconds over UDP **********")
-        print(f"Sending share: {share}")
+        print(f"[ Segment 3-A, sending share: {share[1]} ]")
+
+        # print("********** Task 3A: Show Sending of Shares at Rate of 1 per 10 seconds over UDP **********")
+        # print(f"Sending share: {share}")
 
         server.sendto(share_bytes, ('<broadcast>', 37025))
 
@@ -355,8 +367,7 @@ def user_send(ephID):
             i = 0
 
         # Send every 10 seconds
-        # TODO - UPDATE TO 10 SECONDS, 1 SECOND BETTER FOR TESTING
-        time.sleep(1)
+        time.sleep(10)
 
 ########## RECEIVER ##########
 def add_share(rec_hash, rec_share):
@@ -373,9 +384,9 @@ def add_share(rec_hash, rec_share):
     # ]
     global shares
 
-    print("********** INSIDE ADD_SHARE **********")
-    print(f"rec_hash: {rec_hash}")
-    print(f"rec_share: {rec_share}")
+    # print("********** INSIDE ADD_SHARE **********")
+    # print(f"rec_hash: {rec_hash}")
+    # print(f"rec_share: {rec_share}")
 
     is_hash_in_shares = False
 
@@ -432,15 +443,17 @@ def user_receive():
         share_bytes = binascii.unhexlify(share_hex)
         share = (share_num, share_bytes)
 
-        print("********** Task 3B: Show the receiving of shares **********")
-        print(f"Received Share: {share}")
+        # print("********** Task 3B: Show the receiving of shares **********")
+        # print(f"Received Share: {share}")
+        print(f"[ Segment 3-B, received share: {share[1]} ]")
         
         # Add to shares
         add_share(hash_ephID, share)
-        print("********** SHARES DATA STRUCTURE **********")
-        print(shares)
-        print("********** Task 3C: Keeping track of shares received **********")
-        print(f"Num unique shares received from sender: {num_shares_received(hash_ephID)}")
+        # print("********** SHARES DATA STRUCTURE **********")
+        # print(shares)
+        # print("********** Task 3C: Keeping track of shares received **********")
+        # print(f"Num unique shares received from sender: {num_shares_received(hash_ephID)}")
+        print(f"[ Segment 3-C, total shares received: {num_shares_received(hash_ephID)} ]")
 
         # Task 4: If have 3 shares, reconstruct ephID and check hash
         task4(hash_ephID)
@@ -463,6 +476,7 @@ def task3():
     # Bind socket to localhost port 44444
     server.bind(("", 44444))
 
+    print("\n------------------> Segment 3 <------------------")
     # Create thread for user to broadcast chunks of the EphID
     message = ephID
     send_broadcast = threading.Thread(target=user_send, args=(ephID,))
@@ -539,16 +553,20 @@ def task4(hash_ephID=None):
     # when these have received at least 3 shares.
     if has_k_shares(3, hash_ephID):
         ephID = reconstruct_eph_id(hash_ephID)
-        print("********** Task 4A: Show devices attempting re-construction of EphID when received at least 3 shares **********")
-        print(f"Reconstructed EphID: {ephID}")
+        # print("********** Task 4A: Show devices attempting re-construction of EphID when received at least 3 shares **********")
+        # print(f"Reconstructed EphID: {ephID}")
 
         # Task 4: 4-B Show the devices verifying the re-constructed EphID by taking the hash of re-constructed EphID and 
         # comparing with the hash value received in the advertisement.
-        print("********** Task 4B: Verifying re-constructed EphID **********")
-        print(f"Re-constructed EphID: {ephID}")
-        print(f"Hash of re-constructed EphID: {hashlib.sha256(ephID).hexdigest()}")
-        print(f"Received Hash of EphID: {hash_ephID}")
-        print(f"Do they match? {hashlib.sha256(ephID).hexdigest() == hash_ephID}")
+        # print("********** Task 4B: Verifying re-constructed EphID **********")
+        # print(f"Re-constructed EphID: {ephID}")
+        # print(f"Hash of re-constructed EphID: {hashlib.sha256(ephID).hexdigest()}")
+        # print(f"Received Hash of EphID: {hash_ephID}")
+        # print(f"Do they match? {hashlib.sha256(ephID).hexdigest() == hash_ephID}")
+
+        print("\n------------------> Segment 4 <------------------")
+        print(f"[ Segment 4-A, re-construct EphID: {ephID} ]")
+        print(f"[ Segment 4-B, hash value of re-constructed EphID: {hashlib.sha256(ephID).hexdigest()} is equal to hash value of original EphID: {hash_ephID}")
 
         # Store ephID in shares variable
         add_eph_id_to_shares(hash_ephID, ephID)
@@ -587,8 +605,9 @@ def task5(ephID=ephID):
 
     encID = construct_encID(ephID)
 
-    print("********** Task 5A: Show the devices computing the shared secret EncID **********")
-    print(encID)
+    print("\n------------------> Segment 5 <------------------")
+    #print("********** Task 5A: Show the devices computing the shared secret EncID **********")
+    print(f"[ generate shared secret EncID: {encID} ]")
     
 
 
