@@ -6,7 +6,6 @@ import sys
 from datetime import datetime, timedelta
 from pymongo import MongoClient
 
-from ..DIMY import BloomFilter
 
 APP = Flask(__name__)
 # Allows cross-origin AJAX, so React can talk to this API
