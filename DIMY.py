@@ -267,33 +267,41 @@ client = None
 
 # Task 1: Generate a 16-Byte Ephemeral ID (EphID) after every 1 minute.
 ecdh = None
+ephID = None
+hash_ephID = None
 def genEphID():
     '''
-    Generates a 16-Byte Ephemeral ID
-    Returns ephID
+    Generates a 16-Byte Ephemeral ID and hash of that Ephemeral ID
+    Repeats every minute
     '''
     global ecdh
+    global ephID
+    global hash_ephID
     
     ecdh = ECDH(curve=SECP128r1)
-    ecdh.generate_private_key()
-    public_key = ecdh.get_public_key()
 
-    ephID = public_key.to_string('compressed')[1:]
-    print(f"public key: {public_key.to_string('compressed')}")
-    print(f"Ephemeral ID: {ephID}")
-    print(f"Number of Bytes: {len(ephID)}")
-    
-    return ephID
+    while (True):
+        ecdh.generate_private_key()
+        public_key = ecdh.get_public_key()
+        ephID = public_key.to_string('compressed')[1:]
+        hash_ephID = hashlib.sha256(ephID).hexdigest()
+        # print(f"public key: {public_key.to_string('compressed')}")
+        # print(f"Ephemeral ID: {ephID}")
+        # print(f"Number of Bytes: {len(ephID)}")
+        print("------------------> Segment 1 <------------------")
+        print(f"generate EphID: {ephID}")
+        print(f"hash value of EphID: {hash_ephID}")
 
-ephID = None
+        time.sleep(60)
+
 secret = None
 # Test
 def task1():
     global ephID
-    ephID = genEphID()
 
-    print("********** Task 1: Show Generation of EphID **********")
-    print(f"EphID: {ephID}")
+    # Create thread to generate an ephID every minute
+    create_ephID = threading.Thread(target=genEphID, args=())
+    create_ephID.start()
 
 # Task 2: Prepare n shares of the EphID by using k-out-of-n Shamir Secret Sharing mechanism. 
 # For this implementation, we use the values of k and n to be 3 and 6 respectively.
