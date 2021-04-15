@@ -22,6 +22,7 @@ from ecdsa import ECDH, SECP128r1, VerifyingKey
 # from bloom_filter import BloomFilter
 # from pybloomfilter import BloomFilter
 import bitarray
+import bitarray.util
 import mmh3
 import math
 from Crypto.Random.random import getrandbits
@@ -749,11 +750,15 @@ def task9():
     Sends QBF to back-end server
     Receives results from back-end server
     '''
-    test_qbf = base64.b64encode(b"Test QBF")
+    qbf = combine_dbf_to_qbf()
+    qbf = BloomFilter.serialise(qbf)
+    print("QBF")
+    print(type(qbf))
+    #test_qbf = base64.b64encode(b"Test QBF")
 
     url = 'http://ec2-3-25-246-159.ap-southeast-2.compute.amazonaws.com:9000/comp4337/qbf/query'
     params = {
-        'QBF': test_qbf
+        'QBF': qbf
     }
 
     print("********** Task 9A: Show the devices send the QBF to the back-end server **********")
@@ -819,67 +824,67 @@ def task11():
     }
     requests.post(url=url, json=data)
 
+task9()
 
+# def run_interactive():
+#     while True:
+#         try:
+#             num = input("Enter a number to run up to that task. Enter the function name to run only that function. EOF to end.\n")
+#             try:
+#                 for i, f in enumerate(tasks):
+#                     if num == f.__name__:
+#                         f()
+#             except:
+#                 num = int(num)
+#                 for i in range(num):
+#                     tasks[i]()
+#                     i += 1
+#         except EOFError:
+#             break
 
-def run_interactive():
-    while True:
-        try:
-            num = input("Enter a number to run up to that task. Enter the function name to run only that function. EOF to end.\n")
-            try:
-                for i, f in enumerate(tasks):
-                    if num == f.__name__:
-                        f()
-            except:
-                num = int(num)
-                for i in range(num):
-                    tasks[i]()
-                    i += 1
-        except EOFError:
-            break
+# def handle_args():
+#     import argparse
+#     parser = argparse.ArgumentParser(description="Runner script for DIMY assignment")
+#     parser.add_argument("task", type=int, nargs="*", default=99, help="Task number to run.")
+#     parser.add_argument("--port", "-p", type=int, action="store", nargs=2, help="Port number to run client/server on.")
+#     parser.add_argument("--interactive", "-i", action="store_true", help="Determines whether to run the interactive mode or not.")
 
-def handle_args():
-    import argparse
-    parser = argparse.ArgumentParser(description="Runner script for DIMY assignment")
-    parser.add_argument("task", type=int, nargs="*", default=99, help="Task number to run.")
-    parser.add_argument("--port", "-p", type=int, action="store", nargs=2, help="Port number to run client/server on.")
-    parser.add_argument("--interactive", "-i", action="store_true", help="Determines whether to run the interactive mode or not.")
+#     args = parser.parse_args()
 
-    args = parser.parse_args()
-
-    if args.interactive:
-        run_interactive()
+#     if args.interactive:
+#         run_interactive()
     
-    return args.task, (args.port if args.port else None)
+#     return args.task, (args.port if args.port else None)
 
-tasks = [
-    task1,
-    task2,
-    task3,
-    task4,
-    task5,
-    task6,
-    task7,
-    task8,
-    task9,
-    task10,
-    task11,
-]
+# tasks = [
+#     task1,
+#     task2,
+#     task3,
+#     task4,
+#     task5,
+#     task6,
+#     task7,
+#     task8,
+#     task9,
+#     task10,
+#     task11,
+# ]
 
-if __name__ == "__main__":
-    task, empty = handle_args()
+# if __name__ == "__main__":
+#     task, empty = handle_args()
 
-    if type(task) is not int and len(task) == 1:
-        task = task[0]
-    elif type(task) is not int:
-        for i in task:
-            tasks[i]()
+#     if type(task) is not int and len(task) == 1:
+#         task = task[0]
+#     elif type(task) is not int:
+#         for i in task:
+#             tasks[i]()
 
-    if task > len(tasks):
-        for i, f in enumerate(tasks):
-            f()
-    else:
-        i = 0
-        while i < task:
-            tasks[i]()
-            i += 1
-        # tasks[task - 1]()
+#     if task > len(tasks):
+#         for i, f in enumerate(tasks):
+#             f()
+#     else:
+#         i = 0
+#         while i < task:
+#             tasks[i]()
+#             i += 1
+#         # tasks[task - 1]()
