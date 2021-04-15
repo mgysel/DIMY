@@ -22,7 +22,7 @@ from ecdsa import ECDH, SECP128r1, VerifyingKey
 # from bloom_filter import BloomFilter
 # from pybloomfilter import BloomFilter
 import bitarray
-import bitarray.util as bu
+import bitarray.util
 import mmh3
 import math
 from Crypto.Random.random import getrandbits
@@ -219,44 +219,43 @@ class BloomFilter(object):
                 # else there is probability that it exist
                 return False
         return True
-    
-    bin_map = {
-        "A" = 0,
-        "E" = 1
-    }
 
     @classmethod
     def serialise(self, bit_array):
         '''
         Returns a base64-serialised, string version of itself.
         '''
+        for i in range(4):
+            bit_array.append(0)
         return bitarray.util.ba2base(64, bit_array)
     
     def serialise(self):
         '''
         Returns a base64-serialised, string version of itself.
         '''
-        i = 0
-        while len(self.bit_array) % 6 != 0:
+        for i in range(4):
             self.bit_array.append(0)
-            i += 1
-        return bu.ba2base(64, self.bit_array)
-        # return base64.b64encode(self.bit_array.to01().decode())
-        # return bitarray.util.serialise(self.bit_array)
+        return bitarray.util.ba2base(64, self.bit_array)
     
     @classmethod
     def deserialise(self, base64_string):
         '''
         Returns a bit_array version of base64_string.
         '''
-        return bitarray.util.base2ba(64, base64_string)
+        result = bitarray.util.base2ba(64, base64_string)
+        result = result[:-4]
+        return result
 
     @classmethod
     def deserialise2BloomFilter(self, base64_string):
         '''
         Returns a bloomfilter version of base64_string.
         '''
-        return bitarray.util.base2ba(64, base64_string)
+        result = bitarray.util.base2ba(64, base64_string)
+        result = result[:-4]
+        bf = BloomFilter()
+        bf.bit_array = result
+        return bf
     
     def toString(self):
         return self.bit_array.to01()
@@ -741,11 +740,15 @@ def task9():
     Sends QBF to back-end server
     Receives results from back-end server
     '''
+    #!
+    # Example showing how it works.
     daily_bloom_filter = BloomFilter()
+    daily_bloom_filter.add("howdy there partner")
     qbf = combine_dbf_to_qbf()
     # test_qbf = base64.b64encode(b"Test QBF")
     qbf = qbf.serialise()
     print(qbf)
+    print(BloomFilter.deserialise(qbf))
 
     url = 'http://ec2-3-25-246-159.ap-southeast-2.compute.amazonaws.com:9000/comp4337/qbf/query'
     params = {
