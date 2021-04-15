@@ -22,6 +22,7 @@ from ecdsa import ECDH, SECP128r1, VerifyingKey
 # from bloom_filter import BloomFilter
 # from pybloomfilter import BloomFilter
 import bitarray
+import bitarray.util
 import mmh3
 import math
 from Crypto.Random.random import getrandbits
