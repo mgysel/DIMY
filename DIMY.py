@@ -225,13 +225,15 @@ class BloomFilter(object):
         '''
         Returns a base64-serialised, string version of itself.
         '''
-        return bitarray.util.ba2base(64, bit_array)
+        #return bitarray.util.ba2base(64, bit_array)
+        return base64.b64encode(self.bit_array.to01().encode())
     
     def serialise(self):
         '''
         Returns a base64-serialised, string version of itself.
         '''
-        return bitarray.util.ba2base(64, self.bit_array)
+        #return bitarray.util.ba2base(64, self.bit_array)
+        return base64.b64encode(self.bit_array.to01().encode())
     
     # NOTE: These probably won't be used.
     # @classmethod
@@ -258,6 +260,7 @@ class BloomFilter(object):
 
 # Threading
 import threading
+from json import dumps
 
 server = None
 client = None
@@ -752,26 +755,36 @@ def task9():
     '''
     qbf = combine_dbf_to_qbf()
     qbf = BloomFilter.serialise(qbf)
-    print("QBF")
-    print(type(qbf))
-    #test_qbf = base64.b64encode(b"Test QBF")
 
-    url = 'http://ec2-3-25-246-159.ap-southeast-2.compute.amazonaws.com:9000/comp4337/qbf/query'
-    params = {
-        'QBF': qbf
+    # print("TYPE QBF")
+    # print(type(qbf))
+    # print(type(str(qbf)))
+    # #test_qbf = base64.b64encode(b"Test QBF")
+
+    url = 'http://ec2-3-26-37-172.ap-southeast-2.compute.amazonaws.com:9000/comp4337/qbf/query'
+    data = {
+        'QBF': str(qbf)
     }
+
+    data_json = dumps(data)
+    f = open("qbf.json", "w")
+    f.write(data_json)
+    f.close()
+
+    #print("DATA")
+    #print(data)
 
     print("********** Task 9A: Show the devices send the QBF to the back-end server **********")
     print("Sending the following QBF to the following URL")
-    print(f"QBF: {test_qbf}")
-    print(f"URL: {url}")
+    #print(f"QBF: {qbf}")
+    #print(f"URL: {url}")
 
-    response = requests.post(url=url, params=params)
+    response = requests.post(url=url, data=dumps(data))
     data = response.json()
     
     print("********** Task 9B: Show the devices are able to receive the result of the risk analysis **********")
     print("********** Show the result for a successful as well as unsucessful match **********")
-    print(data)
+    print(response)
 
 
 # Task 10: Show that a device can combine the available DBF into a CBF and upload the CBF to the back-end server. For extension, the back-end server is your own centralised server.
