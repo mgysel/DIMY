@@ -267,6 +267,7 @@ class BloomFilter(object):
 
 # Threading
 import threading
+from json import dumps
 
 server = None
 client = None
@@ -298,9 +299,12 @@ def genEphID():
         # print(f"public key: {public_key.to_string('compressed')}")
         # print(f"Ephemeral ID: {ephID}")
         # print(f"Number of Bytes: {len(ephID)}")
-        print("------------------> Segment 1 <------------------")
+        print("\n------------------> Segment 1 <------------------")
         print(f"generate EphID: {ephID}")
-        print(f"hash value of EphID: {hash_ephID}")
+        print(f"hash value of EphID: {hash_ephID}\n")
+
+        # Whenever new Ephemeral ID is created, create shares  of that Ephemeral ID
+        task2()
 
         time.sleep(60)
 
@@ -329,8 +333,15 @@ def task2():
     global shares
     shares = genShares(ephID)
 
-    print("********** Task 2: Show 6 Shares Generated **********")
-    print(f"Shares: {shares}")    
+    print("------------------> Segment 2 <------------------")
+    #print(f"Shares: {shares}")  
+    print("[")
+    for share in shares:
+        print(f"\t{share[1]}")
+    print("]")
+
+    task3()
+      
 
 
 # Task 3: Broadcast these n shares @ 1 unique share per 10 seconds. 
@@ -353,8 +364,10 @@ def user_send(ephID):
         share = (ephID_shares[i][0], binascii.hexlify(ephID_shares[i][1]), hash_ephID)
         share_bytes = str.encode(str(share))
 
-        print("********** Task 3A: Show Sending of Shares at Rate of 1 per 10 seconds over UDP **********")
-        print(f"Sending share: {share}")
+        print(f"[ Segment 3-A, sending share: {share[1]} ]")
+
+        # print("********** Task 3A: Show Sending of Shares at Rate of 1 per 10 seconds over UDP **********")
+        # print(f"Sending share: {share}")
 
         server.sendto(share_bytes, ('<broadcast>', 37025))
 
@@ -365,8 +378,7 @@ def user_send(ephID):
             i = 0
 
         # Send every 10 seconds
-        # TODO - UPDATE TO 10 SECONDS, 1 SECOND BETTER FOR TESTING
-        time.sleep(1)
+        time.sleep(10)
 
 ########## RECEIVER ##########
 def add_share(rec_hash, rec_share):
@@ -383,9 +395,9 @@ def add_share(rec_hash, rec_share):
     # ]
     global shares
 
-    print("********** INSIDE ADD_SHARE **********")
-    print(f"rec_hash: {rec_hash}")
-    print(f"rec_share: {rec_share}")
+    # print("********** INSIDE ADD_SHARE **********")
+    # print(f"rec_hash: {rec_hash}")
+    # print(f"rec_share: {rec_share}")
 
     is_hash_in_shares = False
 
@@ -442,15 +454,17 @@ def user_receive():
         share_bytes = binascii.unhexlify(share_hex)
         share = (share_num, share_bytes)
 
-        print("********** Task 3B: Show the receiving of shares **********")
-        print(f"Received Share: {share}")
+        # print("********** Task 3B: Show the receiving of shares **********")
+        # print(f"Received Share: {share}")
+        print(f"[ Segment 3-B, received share: {share[1]} ]")
         
         # Add to shares
         add_share(hash_ephID, share)
-        print("********** SHARES DATA STRUCTURE **********")
-        print(shares)
-        print("********** Task 3C: Keeping track of shares received **********")
-        print(f"Num unique shares received from sender: {num_shares_received(hash_ephID)}")
+        # print("********** SHARES DATA STRUCTURE **********")
+        # print(shares)
+        # print("********** Task 3C: Keeping track of shares received **********")
+        # print(f"Num unique shares received from sender: {num_shares_received(hash_ephID)}")
+        print(f"[ Segment 3-C, total shares received: {num_shares_received(hash_ephID)} ]")
 
         # Task 4: If have 3 shares, reconstruct ephID and check hash
         task4(hash_ephID)
@@ -473,6 +487,7 @@ def task3():
     # Bind socket to localhost port 44444
     server.bind(("", 44444))
 
+    print("\n------------------> Segment 3 <------------------")
     # Create thread for user to broadcast chunks of the EphID
     message = ephID
     send_broadcast = threading.Thread(target=user_send, args=(ephID,))
@@ -549,16 +564,20 @@ def task4(hash_ephID=None):
     # when these have received at least 3 shares.
     if has_k_shares(3, hash_ephID):
         ephID = reconstruct_eph_id(hash_ephID)
-        print("********** Task 4A: Show devices attempting re-construction of EphID when received at least 3 shares **********")
-        print(f"Reconstructed EphID: {ephID}")
+        # print("********** Task 4A: Show devices attempting re-construction of EphID when received at least 3 shares **********")
+        # print(f"Reconstructed EphID: {ephID}")
 
         # Task 4: 4-B Show the devices verifying the re-constructed EphID by taking the hash of re-constructed EphID and 
         # comparing with the hash value received in the advertisement.
-        print("********** Task 4B: Verifying re-constructed EphID **********")
-        print(f"Re-constructed EphID: {ephID}")
-        print(f"Hash of re-constructed EphID: {hashlib.sha256(ephID).hexdigest()}")
-        print(f"Received Hash of EphID: {hash_ephID}")
-        print(f"Do they match? {hashlib.sha256(ephID).hexdigest() == hash_ephID}")
+        # print("********** Task 4B: Verifying re-constructed EphID **********")
+        # print(f"Re-constructed EphID: {ephID}")
+        # print(f"Hash of re-constructed EphID: {hashlib.sha256(ephID).hexdigest()}")
+        # print(f"Received Hash of EphID: {hash_ephID}")
+        # print(f"Do they match? {hashlib.sha256(ephID).hexdigest() == hash_ephID}")
+
+        print("\n------------------> Segment 4 <------------------")
+        print(f"[ Segment 4-A, re-construct EphID: {ephID} ]")
+        print(f"[ Segment 4-B, hash value of re-constructed EphID: {hashlib.sha256(ephID).hexdigest()} is equal to hash value of original EphID: {hash_ephID}")
 
         # Store ephID in shares variable
         add_eph_id_to_shares(hash_ephID, ephID)
@@ -597,8 +616,9 @@ def task5(ephID=ephID):
 
     encID = construct_encID(ephID)
 
-    print("********** Task 5A: Show the devices computing the shared secret EncID **********")
-    print(encID)
+    print("\n------------------> Segment 5 <------------------")
+    #print("********** Task 5A: Show the devices computing the shared secret EncID **********")
+    print(f"[ generate shared secret EncID: {encID} ]")
     
 
 
@@ -740,6 +760,10 @@ def task9():
     Sends QBF to back-end server
     Receives results from back-end server
     '''
+# <<<<<<< task2-clean
+#     qbf = combine_dbf_to_qbf()
+#     qbf = BloomFilter.serialise(qbf)
+
     #!
     # Example showing how it works.
     daily_bloom_filter = BloomFilter()
@@ -750,22 +774,35 @@ def task9():
     print(qbf)
     print(BloomFilter.deserialise(qbf))
 
-    url = 'http://ec2-3-25-246-159.ap-southeast-2.compute.amazonaws.com:9000/comp4337/qbf/query'
-    params = {
-        'QBF': test_qbf
+    # print("TYPE QBF")
+    # print(type(qbf))
+    # print(type(str(qbf)))
+    # #test_qbf = base64.b64encode(b"Test QBF")
+
+    url = 'http://ec2-3-26-37-172.ap-southeast-2.compute.amazonaws.com:9000/comp4337/qbf/query'
+    data = {
+        'QBF': str(qbf)
     }
+
+    data_json = dumps(data)
+    f = open("qbf.json", "w")
+    f.write(data_json)
+    f.close()
+
+    #print("DATA")
+    #print(data)
 
     print("********** Task 9A: Show the devices send the QBF to the back-end server **********")
     print("Sending the following QBF to the following URL")
-    print(f"QBF: {test_qbf}")
-    print(f"URL: {url}")
+    #print(f"QBF: {qbf}")
+    #print(f"URL: {url}")
 
-    response = requests.post(url=url, params=params)
+    response = requests.post(url=url, data=dumps(data))
     data = response.json()
     
     print("********** Task 9B: Show the devices are able to receive the result of the risk analysis **********")
     print("********** Show the result for a successful as well as unsucessful match **********")
-    print(data)
+    print(response)
 
 
 # Task 10: Show that a device can combine the available DBF into a CBF and upload the CBF to the back-end server. For extension, the back-end server is your own centralised server.
@@ -818,67 +855,67 @@ def task11():
     }
     requests.post(url=url, json=data)
 
+task9()
 
+# def run_interactive():
+#     while True:
+#         try:
+#             num = input("Enter a number to run up to that task. Enter the function name to run only that function. EOF to end.\n")
+#             try:
+#                 for i, f in enumerate(tasks):
+#                     if num == f.__name__:
+#                         f()
+#             except:
+#                 num = int(num)
+#                 for i in range(num):
+#                     tasks[i]()
+#                     i += 1
+#         except EOFError:
+#             break
 
-def run_interactive():
-    while True:
-        try:
-            num = input("Enter a number to run up to that task. Enter the function name to run only that function. EOF to end.\n")
-            try:
-                for i, f in enumerate(tasks):
-                    if num == f.__name__:
-                        f()
-            except:
-                num = int(num)
-                for i in range(num):
-                    tasks[i]()
-                    i += 1
-        except EOFError:
-            break
+# def handle_args():
+#     import argparse
+#     parser = argparse.ArgumentParser(description="Runner script for DIMY assignment")
+#     parser.add_argument("task", type=int, nargs="*", default=99, help="Task number to run.")
+#     parser.add_argument("--port", "-p", type=int, action="store", nargs=2, help="Port number to run client/server on.")
+#     parser.add_argument("--interactive", "-i", action="store_true", help="Determines whether to run the interactive mode or not.")
 
-def handle_args():
-    import argparse
-    parser = argparse.ArgumentParser(description="Runner script for DIMY assignment")
-    parser.add_argument("task", type=int, nargs="*", default=99, help="Task number to run.")
-    parser.add_argument("--port", "-p", type=int, action="store", nargs=2, help="Port number to run client/server on.")
-    parser.add_argument("--interactive", "-i", action="store_true", help="Determines whether to run the interactive mode or not.")
+#     args = parser.parse_args()
 
-    args = parser.parse_args()
-
-    if args.interactive:
-        run_interactive()
+#     if args.interactive:
+#         run_interactive()
     
-    return args.task, (args.port if args.port else None)
+#     return args.task, (args.port if args.port else None)
 
-tasks = [
-    task1,
-    task2,
-    task3,
-    task4,
-    task5,
-    task6,
-    task7,
-    task8,
-    task9,
-    task10,
-    task11,
-]
+# tasks = [
+#     task1,
+#     task2,
+#     task3,
+#     task4,
+#     task5,
+#     task6,
+#     task7,
+#     task8,
+#     task9,
+#     task10,
+#     task11,
+# ]
 
-if __name__ == "__main__":
-    task, empty = handle_args()
+# if __name__ == "__main__":
+#     task, empty = handle_args()
 
-    if type(task) is not int and len(task) == 1:
-        task = task[0]
-    elif type(task) is not int:
-        for i in task:
-            tasks[i]()
+#     if type(task) is not int and len(task) == 1:
+#         task = task[0]
+#     elif type(task) is not int:
+#         for i in task:
+#             tasks[i]()
 
-    if task > len(tasks):
-        for i, f in enumerate(tasks):
-            f()
-    else:
-        i = 0
-        while i < task:
-            tasks[i]()
-            i += 1
-        # tasks[task - 1]()
+#     if task > len(tasks):
+#         for i, f in enumerate(tasks):
+#             f()
+#     else:
+#         i = 0
+#         while i < task:
+#             tasks[i]()
+#             i += 1
+#         # tasks[task - 1]()
