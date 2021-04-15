@@ -219,36 +219,43 @@ class BloomFilter(object):
                 # else there is probability that it exist
                 return False
         return True
-    
+
     @classmethod
     def serialise(self, bit_array):
         '''
         Returns a base64-serialised, string version of itself.
         '''
-        #return bitarray.util.ba2base(64, bit_array)
-        return base64.b64encode(self.bit_array.to01().encode())
+        for i in range(4):
+            bit_array.append(0)
+        return bitarray.util.ba2base(64, bit_array)
     
     def serialise(self):
         '''
         Returns a base64-serialised, string version of itself.
         '''
-        #return bitarray.util.ba2base(64, self.bit_array)
-        return base64.b64encode(self.bit_array.to01().encode())
+        for i in range(4):
+            self.bit_array.append(0)
+        return bitarray.util.ba2base(64, self.bit_array)
     
-    # NOTE: These probably won't be used.
-    # @classmethod
-    # def deserialise(self, base64_string):
-    #     '''
-    #     Returns a bit_array version of base64_string.
-    #     '''
-    #     return bitarray.util.base2ba(64, base64_string)
+    @classmethod
+    def deserialise(self, base64_string):
+        '''
+        Returns a bit_array version of base64_string.
+        '''
+        result = bitarray.util.base2ba(64, base64_string)
+        result = result[:-4]
+        return result
 
-    # @classmethod
-    # def deserialise2BloomFilter(self, base64_string):
-    #     '''
-    #     Returns a bloomfilter version of base64_string.
-    #     '''
-    #     return bitarray.util.base2ba(64, base64_string)
+    @classmethod
+    def deserialise2BloomFilter(self, base64_string):
+        '''
+        Returns a bloomfilter version of base64_string.
+        '''
+        result = bitarray.util.base2ba(64, base64_string)
+        result = result[:-4]
+        bf = BloomFilter()
+        bf.bit_array = result
+        return bf
     
     def toString(self):
         return self.bit_array.to01()
@@ -753,8 +760,19 @@ def task9():
     Sends QBF to back-end server
     Receives results from back-end server
     '''
+# <<<<<<< task2-clean
+#     qbf = combine_dbf_to_qbf()
+#     qbf = BloomFilter.serialise(qbf)
+
+    #!
+    # Example showing how it works.
+    daily_bloom_filter = BloomFilter()
+    daily_bloom_filter.add("howdy there partner")
     qbf = combine_dbf_to_qbf()
-    qbf = BloomFilter.serialise(qbf)
+    # test_qbf = base64.b64encode(b"Test QBF")
+    qbf = qbf.serialise()
+    print(qbf)
+    print(BloomFilter.deserialise(qbf))
 
     # print("TYPE QBF")
     # print(type(qbf))
