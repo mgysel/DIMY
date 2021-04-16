@@ -26,10 +26,10 @@ def is_match(qbf, cbf):
     returns true if a match
     returns false otherwise
     '''
-    contact_bloom_filter = BloomFilter.deserialise2BloomFilter(cbf)
-    query_bloom_filter = BloomFilter.deserialise2BloomFilter(qbf)
+    contact_bloom_filter = BloomFilter.deserialise(cbf)
+    query_bloom_filter = BloomFilter.deserialise(qbf)
     result = cbf & qbf
-    return True if 1 in result.bit_array else False
+    return True if 1 in result else False
 
 def is_user_positive(qbf):
     '''
