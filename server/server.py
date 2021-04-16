@@ -6,6 +6,11 @@ import sys
 from datetime import datetime, timedelta
 from pymongo import MongoClient
 
+try:
+    from ..DIMY import BloomFilter
+except:
+    print(sys.path)
+    from BloomFilter import BloomFilter
 
 APP = Flask(__name__)
 # Allows cross-origin AJAX, so React can talk to this API
@@ -21,6 +26,8 @@ def is_match(qbf, cbf):
     returns true if a match
     returns false otherwise
     '''
+    contact_bloom_filter = BloomFilter.deserialise2BloomFilter(cbf)
+    query_bloom_filter = BloomFilter.deserialise2BloomFilter(qbf)
     result = cbf & qbf
     return True if 1 in result.bit_array else False
 

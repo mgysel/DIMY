@@ -661,10 +661,10 @@ def stored_DBFs_checker():
     global DBF_list
 
     if len(DBF_list) < 6:
-        DBF_list.append(daily_bloom_filter)
+        DBF_list.append(daily_bloom_filter) if daily_bloom_filter else print("No bloom filter yet.")
     else:
         DBF_list.pop(0)
-        DBF_list.append(daily_bloom_filter)
+        DBF_list.append(daily_bloom_filter) if daily_bloom_filter else print("No bloom filter yet.")
     # print(len(DBF_list))
 
 def erase_stored_DBFs():
@@ -728,7 +728,7 @@ def one_day_passed():
 # Task 8: Show that after every 60 minutes, the devices combine all the available DBFs into a single QBF.
 qbf = None
 
-def combine_dbf_to_qbf(qbf=None, dbfs=[], debug=False):
+def combine_bloom_filter(qbf=None, dbfs=[], debug=False):
     qbf = BloomFilter() if not qbf else qbf
     # if not DBF_list:
     #     DBF_list = dbfs
@@ -748,7 +748,7 @@ def task8():
     while True:
         # NTS: Need more clarification.
         one_day_passed()
-        qbf = combine_dbf_to_qbf()
+        qbf = combine_bloom_filter()
         print(qbf.__repr__)
         # time.sleep(60 * 60)
         time.sleep(6 * 1)
@@ -768,7 +768,7 @@ def task9():
     # Example showing how it works.
     daily_bloom_filter = BloomFilter()
     daily_bloom_filter.add("howdy there partner")
-    qbf = combine_dbf_to_qbf()
+    qbf = combine_bloom_filter()
     # test_qbf = base64.b64encode(b"Test QBF")
     qbf = qbf.serialise()
     print(qbf)
@@ -832,11 +832,18 @@ def task10():
 # Task 11: 11-A Show that the device is able to establish a TCP connection with the centralised server and perform Tasks 9 and 10 successfully.
 # Task 11: 11-B Show the terminal for the back-end server performing the QBF-CBF matching operation for risk analysis.
 def task11():
-    base_url = 'http://127.0.0.1:2110'
+    base_url = 'http://127.0.0.1:5000'
 
     # Query QBF with centralized server
     print("Task 11A: Querying centralized server with QBF")
-    test_qbf = 'test_qbf'
+    new_DBF()
+    daily_bloom_filter.add("howdy there partner")
+    daily_bloom_filter.add("More text")
+    new_DBF()
+    daily_bloom_filter.add("wow, this is a lot of work")
+    new_DBF()
+    qbf = combine_bloom_filter()
+    test_qbf = qbf.serialise()
     url = f"{base_url}/match"
     data = {
         'QBF': test_qbf
@@ -849,13 +856,16 @@ def task11():
     # Upload CBF to centralized server
     print("Task 11A: Uploading CBF to centralized server")
     url = f"{base_url}/upload"
-    test_cbf = 'test_cbf'
+    new_DBF()
+    daily_bloom_filter.add("curse it all")
+    stored_DBFs_checker()
+    test_cbf = combine_bloom_filter()
     data = {
         'CBF': test_cbf
     }
     requests.post(url=url, json=data)
 
-task9()
+task11()
 
 # def run_interactive():
 #     while True:
