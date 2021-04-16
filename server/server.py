@@ -28,7 +28,7 @@ def is_match(qbf, cbf):
     '''
     contact_bloom_filter = BloomFilter.deserialise(cbf)
     query_bloom_filter = BloomFilter.deserialise(qbf)
-    result = cbf & qbf
+    result = contact_bloom_filter & query_bloom_filter
     return True if 1 in result else False
 
 def is_user_positive(qbf):

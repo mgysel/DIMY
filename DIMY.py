@@ -860,6 +860,7 @@ def task11():
     daily_bloom_filter.add("curse it all")
     stored_DBFs_checker()
     test_cbf = combine_bloom_filter()
+    test_cbf = test_cbf.serialise()
     data = {
         'CBF': test_cbf
     }
