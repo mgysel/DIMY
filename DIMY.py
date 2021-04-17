@@ -693,7 +693,6 @@ def task7():
     '''
     # start = time.time()
     task6()
-    print("********** TASK 7 **********")
     # print(daily_bloom_filter)
     print(daily_bloom_filter.__repr__)
 
@@ -702,24 +701,28 @@ def task7():
     # dbf_timer_thread = threading.Thread(target=new_DBF_timer, kwargs=dict(period=0))
     # Maximum of 6 DBFs
     # stored_dbf_thread = threading.Thread(target=stored_DBFs_checker)
+    print("------------------> Segment 7 <------------------")
+    def run_task7():
+        while True:
+    # This should cover 7-A
+            EncID_list = []
+            end = randint(1, 10)
+            for i in range(end):
+                EncID_list.append(construct_encID(genEphID()))
+            list_EncID_to_DBF(EncID_list=EncID_list)
 
-    while True:
-# This should cover 7-A
-        EncID_list = []
-        end = randint(1, 10)
-        for i in range(end):
-            EncID_list.append(construct_encID(genEphID()))
-        list_EncID_to_DBF(EncID_list=EncID_list)
+            # ! This will go unused until I work out how to work with it.
+            # dbf_timer_thread.start()
+            # stored_DBFs_checker().start()
 
-        # ! This will go unused until I work out how to work with it.
-        # dbf_timer_thread.start()
-        # stored_DBFs_checker().start()
-
-# This should cover 7-B
-        # time.sleep(60*10)
-        time.sleep(3)
-        new_DBF()
-        print(daily_bloom_filter.__repr__)
+    # This should cover 7-B
+            # time.sleep(60*10)
+            time.sleep(3)
+            new_DBF()
+            print(daily_bloom_filter.__repr__)
+    
+    task7_thread = threading.Thread(target=run_task7)
+    task7_thread.start()
 
 
 def one_day_passed():
@@ -736,7 +739,8 @@ def one_day_passed():
 qbf = None
 
 def combine_bloom_filter(qbf=None, dbfs=[], debug=False):
-    qbf = BloomFilter() if not qbf else qbf
+    new_DBF()
+    # qbf = BloomFilter() if not qbf else qbf
     # if not DBF_list:
     #     DBF_list = dbfs
     for dbf in DBF_list:
@@ -747,18 +751,21 @@ def combine_bloom_filter(qbf=None, dbfs=[], debug=False):
 
 def task8():
     global qbf
-    print("********** TASK 8 **********")
+    print("------------------> Segment 8 <------------------")
     print("Show that after every 60 minutes, the devices combine all the available DBFs into a single QBF.")
 
     # one_day_passed()
-
-    while True:
-        # NTS: Need more clarification.
-        one_day_passed()
-        qbf = combine_bloom_filter()
-        print(qbf.__repr__)
-        # time.sleep(60 * 60)
-        time.sleep(6 * 1)
+    def run_task8():
+        while True:
+            # NTS: Need more clarification.
+            one_day_passed()
+            qbf = combine_bloom_filter()
+            print(qbf.__repr__)
+            time.sleep(60 * 60)
+            # time.sleep(6 * 1)
+    
+    task8_thread = threading.Thread(target=run_task8)
+    task8_thread.start()
 
 # Task 9: 9-A Show that the devices send the QBF to the back-end server. For extension, the back-end server is your own centralised server.
 # Task 9: 9-B Show that the devices are able to receive the result of risk analysis back from the back-end server. Show the result for a successful as well as an unsuccessful match. For extension, the back-end server is your own centralised server.
