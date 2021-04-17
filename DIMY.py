@@ -364,7 +364,7 @@ def user_send(ephID):
         share = (ephID_shares[i][0], binascii.hexlify(ephID_shares[i][1]), hash_ephID)
         share_bytes = str.encode(str(share))
 
-        print(f"[ Segment 3-A, sending share: {share[1]} ]")
+        print(f"\n[ Segment 3-A, sending share: {share[1]} ]")
 
         # print("********** Task 3A: Show Sending of Shares at Rate of 1 per 10 seconds over UDP **********")
         # print(f"Sending share: {share}")
@@ -528,14 +528,17 @@ def has_k_shares(k, rec_hash):
     '''
     Determines if the receiver has enough of rec_hash shares 
     to reconstruct the sender's EphID
+    and if the EphID was not already reconstructed
     '''
     global shares
 
     for share in shares:
         if share['hash'] == rec_hash:
-            return len(share['shares']) >= k
+            if share['ephID'] is None:
+                return len(share['shares']) >= k
 
     return False
+
 
 def reconstruct_eph_id(rec_hash):
     '''
@@ -619,6 +622,9 @@ def task5(ephID=ephID):
     print("\n------------------> Segment 5 <------------------")
     #print("********** Task 5A: Show the devices computing the shared secret EncID **********")
     print(f"[ generate shared secret EncID: {encID} ]")
+
+    # Now encode EncID into a bloom filter called Daily Bloom Filter (DBF) and delete the EncID
+    task6(encID)
     
 
 
@@ -628,11 +634,11 @@ def task6(EncID=None):
     '''
     Show that the devices are encoding EncID into the DBF and deleting the EncID.
     '''
-    print("********** TASK 6 **********")
+    print("\n------------------> Segment 6 <------------------")
     global daily_bloom_filter
     
     # This exists to get the EncID because the generation of the EncID itself isn't a separate function. Basically, just in case.
-    EncID = construct_encID(genEphID())
+    # EncID = construct_encID(genEphID())
     
     # ! May need to move this to global depending on how everything flows.
     # instantiates bloom filter with n=1000, m=800000 bits and a false positive rate of p=0.0000062, k=3 hashes
@@ -640,7 +646,8 @@ def task6(EncID=None):
     
     daily_bloom_filter.add(EncID, debug=True)
     assert EncID in daily_bloom_filter
-    print(daily_bloom_filter)
+    #print(daily_bloom_filter)
+    print("[ ======== insert into DBF (murmur3 hashing with 3 hashes) ]")
     
     global encID
     EncID = None
@@ -794,7 +801,7 @@ def task10():
     # Example showing how it works.
     daily_bloom_filter = BloomFilter()
     daily_bloom_filter.add("howdy there partner")
-    cbf = combine_dbf_to_qbf()
+    cbf = combine_bloom_filter()
     cbf = cbf.serialise()
 
     url = 'http://ec2-3-26-37-172.ap-southeast-2.compute.amazonaws.com:9000/comp4337/cbf/upload'
@@ -814,7 +821,8 @@ def task10():
     print(response)
     print(data)
 
-task10()
+#task10()
+task1()
 
 # Task 11: 11-A Show that the device is able to establish a TCP connection with the centralised server and perform Tasks 9 and 10 successfully.
 # Task 11: 11-B Show the terminal for the back-end server performing the QBF-CBF matching operation for risk analysis.
@@ -853,7 +861,7 @@ def task11():
     }
     requests.post(url=url, json=data)
 
-task11()
+#task11()
 
 # def run_interactive():
 #     while True:
