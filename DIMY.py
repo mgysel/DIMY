@@ -454,6 +454,21 @@ def num_shares_received(recv_hash):
 
     return 0
 
+def has_k_shares(k, recv_hash):
+    '''
+    Determines if the receiver has enough of rec_hash shares 
+    to reconstruct the sender's EphID
+    and if the EphID was not already reconstructed
+    '''
+    global recv_shares
+
+    for share in recv_shares:
+        if share['hash'] == recv_hash:
+            if share['ephID'] is None:
+                return len(share['shares']) >= k
+
+    return False
+
 def user_receive():
     '''
     User receives broadcast from another user
@@ -547,21 +562,6 @@ start_send_recv_threads()
 
 # Task 4: 4-A Show the devices attempting re-construction of EphID when these have received at least 3 shares.
 # Task 4: 4-B Show the devices verifying the re-constructed EphID by taking the hash of re-constructed EphID and comparing with the hash value received in the advertisement.
-
-def has_k_shares(k, recv_hash):
-    '''
-    Determines if the receiver has enough of rec_hash shares 
-    to reconstruct the sender's EphID
-    and if the EphID was not already reconstructed
-    '''
-    global recv_shares
-
-    for share in recv_shares:
-        if share['hash'] == recv_hash:
-            if share['ephID'] is None:
-                return len(share['shares']) >= k
-
-    return False
 
 def reconstruct_eph_id(rec_hash):
     '''
@@ -683,6 +683,8 @@ def task6(EncID):
 
 
 ############################## TASK 7 ##############################
+# Encode EncIDs into DBF, Create new DBF every 10 minutes
+
 # Task 7: 7-A Show that the devices are encoding multiple EncIDs into the same DBF and show the state of the DBF after each addition.
 # Task 7: 7-B Show that a new DBF gets created for the devices after every 10 minutes. A device can only store maximum of 6 DBFs.
 DBF_list = []
@@ -720,11 +722,10 @@ def task7():
     Show that the devices are encoding multiple EncIDs into the same DBF and show the state of the DBF after each addition.
     Show that a new DBF gets created for the devices after every 10 minutes. A device can only store maximum of 6 DBFs.
     '''
-    task6()
+    #task6()
     # print(daily_bloom_filter)
     print(daily_bloom_filter.__repr__)
 
-# This should work...
     print("------------------> Segment 7 <------------------")
     def run_task7():
         while True:
@@ -744,6 +745,7 @@ def task7():
     task7_thread = threading.Thread(target=run_task7)
     task7_thread.start()
 
+#task7()
 
 def one_day_passed():
     global DBF_list
@@ -754,6 +756,9 @@ def one_day_passed():
         for i in range(end):
             EncID_list.append(construct_encID(genEphID()))
         list_EncID_to_DBF(EncID_list=EncID_list)
+
+
+
 
 # Task 8: Show that after every 60 minutes, the devices combine all the available DBFs into a single QBF.
 qbf = None
@@ -786,6 +791,9 @@ def task8():
     
     task8_thread = threading.Thread(target=run_task8)
     task8_thread.start()
+
+
+
 
 # Task 9: 9-A Show that the devices send the QBF to the back-end server. For extension, the back-end server is your own centralised server.
 # Task 9: 9-B Show that the devices are able to receive the result of risk analysis back from the back-end server. Show the result for a successful as well as an unsuccessful match. For extension, the back-end server is your own centralised server.
