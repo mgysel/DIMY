@@ -143,3 +143,4 @@ cython_debug/
 
 ecdsa/
 qbf.json
+client*.txt
