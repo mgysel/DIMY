@@ -660,6 +660,7 @@ def task6(EncID=None):
 DBF_list = []
 def list_EncID_to_DBF(DBF=None, EncID_list=None):
     global daily_bloom_filter
+    print("[ ======== insert into DBF (murmur3 hashing with 3 hashes) ]")
     if DBF:
         daily_bloom_filter = DBF
     for encid in EncID_list:
