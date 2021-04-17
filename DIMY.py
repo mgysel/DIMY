@@ -642,7 +642,8 @@ def task6(EncID=None):
     
     # ! May need to move this to global depending on how everything flows.
     # instantiates bloom filter with n=1000, m=800000 bits and a false positive rate of p=0.0000062, k=3 hashes
-    daily_bloom_filter = BloomFilter(size=800000, items_count=1000, fp_prob=0.0000062, num_hashes=3)
+    # daily_bloom_filter = BloomFilter(size=800000, items_count=1000, fp_prob=0.0000062, num_hashes=3)
+    new_DBF()
     
     daily_bloom_filter.add(EncID, debug=True)
     assert EncID in daily_bloom_filter
@@ -680,7 +681,6 @@ def erase_stored_DBFs():
 
 def new_DBF():
     global daily_bloom_filter
-    # while True:
     stored_DBFs_checker()
     daily_bloom_filter = BloomFilter(size=800000, items_count=1000, fp_prob=0.0000062, num_hashes=3)
     # print(daily_bloom_filter)
@@ -691,16 +691,11 @@ def task7():
     Show that the devices are encoding multiple EncIDs into the same DBF and show the state of the DBF after each addition.
     Show that a new DBF gets created for the devices after every 10 minutes. A device can only store maximum of 6 DBFs.
     '''
-    # start = time.time()
     task6()
     # print(daily_bloom_filter)
     print(daily_bloom_filter.__repr__)
 
-# This needs more experimentation. I'm struggling to implement it as a thread for now. Not thinking it properly.
-    # ! This will go unused until I work out how to work with it.
-    # dbf_timer_thread = threading.Thread(target=new_DBF_timer, kwargs=dict(period=0))
-    # Maximum of 6 DBFs
-    # stored_dbf_thread = threading.Thread(target=stored_DBFs_checker)
+# This should work...
     print("------------------> Segment 7 <------------------")
     def run_task7():
         while True:
@@ -711,14 +706,10 @@ def task7():
                 EncID_list.append(construct_encID(genEphID()))
             list_EncID_to_DBF(EncID_list=EncID_list)
 
-            # ! This will go unused until I work out how to work with it.
-            # dbf_timer_thread.start()
-            # stored_DBFs_checker().start()
-
     # This should cover 7-B
-            # time.sleep(60*10)
+            # time.sleep(60 * 10)
             time.sleep(3)
-            new_DBF()
+            stored_DBFs_checker()
             print(daily_bloom_filter.__repr__)
     
     task7_thread = threading.Thread(target=run_task7)
