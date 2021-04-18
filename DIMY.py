@@ -704,11 +704,12 @@ def new_DBF():
 def EncID_to_DBF():
     while True:
 # This should cover 7-A
-        EncID_list = []
-        end = randint(1, 10)
-        for i in range(end):
-            EncID_list.append(construct_encID(genEphID()))
-        list_EncID_to_DBF(EncID_list=EncID_list)
+        # EncID_list = []
+        # end = randint(1, 10)
+        # for i in range(end):
+        #     EncID_list.append(construct_encID(genEphID()))
+        # list_EncID_to_DBF(EncID_list=EncID_list)
+        add_encID_to_DBF()
 
 def dbf_checker():
 # This should cover 7-B
