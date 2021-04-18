@@ -92,8 +92,10 @@ class BloomFilter(object):
             # set the bit True in bit_array
             self.bit_array[digest] = True
             
-            if debug is True:
-                print(digest, end=" ")
+        if debug is True:
+            print("[ Segment 7-A, insert EncID into DBF at positions: ", end="")
+            print(*digests, sep=", ", end="")
+            print("]")
         
         self.curr_num += 1
 
