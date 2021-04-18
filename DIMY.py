@@ -12,6 +12,7 @@ import base64
 import socket
 import time
 
+import datetime
 import binascii
 
 #import ecdsa
@@ -44,8 +45,9 @@ class BloomFilter(object):
     # k = how many times to hash
     hash_count = None
     bit_array = None
-    
-    curr_num = 0
+
+    digests = []
+    true_bits = []
 
     def __init__(self, size=800000, items_count=1000, fp_prob=0.0000062, num_hashes=3):
         '''
@@ -72,30 +74,34 @@ class BloomFilter(object):
         # initialize all bits as 0
         self.bit_array.setall(0)
         
-        self.curr_num = 0
 
     def add(self, item, debug=False):
         '''
         Add an item in the filter
         '''
-        digests = []
-        if debug is True:
-            print("Changes: ", end="")
+        self.digests = []
         for i in range(self.hash_count):
 
             # create digest for given item.
             # i work as seed to mmh3.hash() function
             # With different seed, digest created is different
             digest = mmh3.hash(item, i) % self.size
-            digests.append(digest)
+            self.digests.append(digest)
 
             # set the bit True in bit_array
             self.bit_array[digest] = True
-            
-            if debug is True:
-                print(digest, end=" ")
+
+        self.true_bits.extend(digests)
         
-        self.curr_num += 1
+        if debug is True:
+            print("[ Segment 7-A, insert EncID into DBF at positions: ", end="")
+            print(*digests, sep=", ", end="")
+            print("]")
+            print("[ current DBF state after inserting new EncID: ", end="")
+            # Need index.
+            print(*self.true_bits, sep=", ", end="")
+            print("]")
+        
 
     def check(self, item):
         '''
@@ -260,9 +266,12 @@ class BloomFilter(object):
     def toString(self):
         return self.bit_array.to01()
     
-    def print(self):
-        print(self)
+    def print_index(self):
+        print(*self.true_bits, sep=", ", end="")
 
+    def get_indexes(self):
+        for bit in self.true_bits:
+            yield bit
 
 
 # Threading
@@ -664,9 +673,9 @@ def task6(EncID):
     # ! May need to move this to global depending on how everything flows.
     # instantiates bloom filter with n=1000, m=800000 bits and a false positive rate of p=0.0000062, k=3 hashes
     # daily_bloom_filter = BloomFilter(size=800000, items_count=1000, fp_prob=0.0000062, num_hashes=3)
-    new_DBF()
+    # new_DBF()
     
-    daily_bloom_filter.add(EncID, debug=True)
+    daily_bloom_filter.add(EncID)
     assert EncID in daily_bloom_filter
     #print(daily_bloom_filter)
     print("[ ======== insert into DBF (murmur3 hashing with 3 hashes) ]")
@@ -694,16 +703,20 @@ def list_EncID_to_DBF(DBF=None, EncID_list=None):
     if DBF:
         daily_bloom_filter = DBF
     for encid in EncID_list:
-        daily_bloom_filter.add(encid, debug=True)
+        daily_bloom_filter.add(encid)
+
+def add_encID_to_DBF():
+    if encID and encID not in daily_bloom_filter:
+        daily_bloom_filter.add(encID)
 
 def stored_DBFs_checker():
     global DBF_list
 
     if len(DBF_list) < 6:
-        DBF_list.append(daily_bloom_filter) if daily_bloom_filter else print("No bloom filter yet.")
+        DBF_list.append(daily_bloom_filter)
     else:
         DBF_list.pop(0)
-        DBF_list.append(daily_bloom_filter) if daily_bloom_filter else print("No bloom filter yet.")
+        DBF_list.append(daily_bloom_filter)
     # print(len(DBF_list))
 
 def erase_stored_DBFs():
@@ -712,38 +725,53 @@ def erase_stored_DBFs():
 
 def new_DBF():
     global daily_bloom_filter
-    stored_DBFs_checker()
+    if daily_bloom_filter:
+        stored_DBFs_checker()
     daily_bloom_filter = BloomFilter(size=800000, items_count=1000, fp_prob=0.0000062, num_hashes=3)
-    # print(daily_bloom_filter)
     # time.sleep(period)
+
+
+def EncID_to_DBF():
+    while True:
+# This should cover 7-A
+        # EncID_list = []
+        # end = randint(1, 10)
+        # for i in range(end):
+        #     EncID_list.append(construct_encID(genEphID()))
+        # list_EncID_to_DBF(EncID_list=EncID_list)
+        add_encID_to_DBF()
+
+def dbf_checker():
+# This should cover 7-B
+    while True:
+        stored_DBFs_checker()
+        # time.sleep(3)
+        time.sleep(60 * 10)
+        # print(daily_bloom_filter.__repr__)
+
 
 def task7():
     '''
     Show that the devices are encoding multiple EncIDs into the same DBF and show the state of the DBF after each addition.
     Show that a new DBF gets created for the devices after every 10 minutes. A device can only store maximum of 6 DBFs.
     '''
-    #task6()
+    # task6()
     # print(daily_bloom_filter)
     print(daily_bloom_filter.__repr__)
 
     print("------------------> Segment 7 <------------------")
-    def run_task7():
-        while True:
-    # This should cover 7-A
-            EncID_list = []
-            end = randint(1, 10)
-            for i in range(end):
-                EncID_list.append(construct_encID(genEphID()))
-            list_EncID_to_DBF(EncID_list=EncID_list)
-
-    # This should cover 7-B
-            # time.sleep(60 * 10)
-            time.sleep(3)
-            stored_DBFs_checker()
-            print(daily_bloom_filter.__repr__)
+    print("[ Segment 7-A, insert EncID into DBF at positions: ", end="")
+    print(*daily_bloom_filter.digests, sep=", ", end="")
+    print("]")
+    print("[ current DBF state after inserting new EncID: ", end="")
+    print(*daily_bloom_filter.true_bits, sep=", ", end="")
+    print("]")
     
-    task7_thread = threading.Thread(target=run_task7)
-    task7_thread.start()
+# task7a_thread = threading.Thread(target=EncID_to_DBF)
+# task7a_thread.start()
+
+# task7b_thread = threading.Thread(target=dbf_checker)
+# task7b_thread.start()
 
 #task7()
 
@@ -763,34 +791,50 @@ def one_day_passed():
 # Task 8: Show that after every 60 minutes, the devices combine all the available DBFs into a single QBF.
 qbf = None
 
-def combine_bloom_filter(qbf=None, dbfs=[], debug=False):
+def combine_bloom_filter(debug=False):
+    global qbf
     new_DBF()
+    qbf = daily_bloom_filter
     # qbf = BloomFilter() if not qbf else qbf
     # if not DBF_list:
     #     DBF_list = dbfs
     for dbf in DBF_list:
-        qbf.union(dbf, inplace=True, debug=True)
+        qbf.union(dbf, inplace=True)
         if debug:
             print(qbf.__repr__)
     return qbf
 
+last_combine_run = time.time()
+
+def bloom_filter_combiner():
+    global last_combine_run
+    while True:
+        # NTS: Need more clarification.
+        one_day_passed()
+        last_combine_run = datetime.datetime().now()
+        combine_bloom_filter()
+        time.sleep(60 * 60)
+        # time.sleep(6 * 1)
+        
+
 def task8():
     global qbf
-    print("------------------> Segment 8 <------------------")
-    print("Show that after every 60 minutes, the devices combine all the available DBFs into a single QBF.")
+    # print("Show that after every 60 minutes, the devices combine all the available DBFs into a single QBF.")
 
     # one_day_passed()
-    def run_task8():
-        while True:
-            # NTS: Need more clarification.
-            one_day_passed()
-            qbf = combine_bloom_filter()
-            print(qbf.__repr__)
-            time.sleep(60 * 60)
-            # time.sleep(6 * 1)
-    
-    task8_thread = threading.Thread(target=run_task8)
-    task8_thread.start()
+    print("------------------> Segment 8 <------------------")
+    print(f"[ combine DBFs into a single QBF - {last_combine_run.strftime('%Y-%m-%d:%H:%M:%S')} ]")
+    print(f"[ Currently have {len(DBF_list)} DBF, it's state: ", end="")
+    print("{", end="")
+    DBF_list[0].print_index()
+    print("} ]")
+    print("[ Single QBF: {", end="")
+    daily_bloom_filter.print_index()
+    print("} ]")
+    print(f"[ NEXT QUERY TIME - {(last_combine_run + datetime.timedelta(hours=1)).strftime('%Y-%m-%d:%H:%M:%S')} ]")
+
+# task8_thread = threading.Thread(target=bloom_filter_combiner)
+# task8_thread.start()
 
 
 
@@ -803,8 +847,10 @@ def task9():
     Receives results from back-end server
     '''
     # Example showing how it works.
-    daily_bloom_filter = BloomFilter()
-    daily_bloom_filter.add("howdy there partner")
+    # daily_bloom_filter = BloomFilter()
+    # new_DBF()
+    daily_bloom_filter.add("howdy there partner", debug=True)
+    assert "howdy there partner" in daily_bloom_filter
     qbf = combine_bloom_filter()
     # test_qbf = base64.b64encode(b"Test QBF")
     qbf = qbf.serialise()
@@ -834,7 +880,7 @@ def task10():
     Device uploads the CBF to the backend server
     '''
     # Example showing how it works.
-    daily_bloom_filter = BloomFilter()
+    # daily_bloom_filter = BloomFilter()
     daily_bloom_filter.add("howdy there partner")
     cbf = combine_bloom_filter()
     cbf = cbf.serialise()
@@ -856,8 +902,6 @@ def task10():
     print(response)
     print(data)
 
-#task10()
-
 # Task 11: 11-A Show that the device is able to establish a TCP connection with the centralised server and perform Tasks 9 and 10 successfully.
 # Task 11: 11-B Show the terminal for the back-end server performing the QBF-CBF matching operation for risk analysis.
 def task11():
@@ -865,7 +909,7 @@ def task11():
 
     # Query QBF with centralized server
     print("Task 11A: Querying centralized server with QBF")
-    new_DBF()
+    # new_DBF()
     daily_bloom_filter.add("howdy there partner")
     daily_bloom_filter.add("More text")
     new_DBF()
@@ -895,7 +939,21 @@ def task11():
     }
     requests.post(url=url, json=data)
 
-#task11()
+# if __name__ == "__main__":
+#     new_DBF()
+#     print("======= created a new Contact BloomFilter (every 10 minutes will create a new one, maximum 6 CBFs) ======= ")
+
+#     task1()
+#     task2()
+#     task3()
+#     task4()
+#     task5()
+#     task6()
+#     task7()
+#     task8()
+#     task9()
+#     task10()
+#     task11()
 
 # def run_interactive():
 #     while True:
