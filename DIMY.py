@@ -280,7 +280,7 @@ from json import dumps
 
 server = None
 client = None
-
+server_url = 'http://127.0.0.1:5000'
 
 
 
@@ -355,7 +355,7 @@ def genEphIDHashShares():
 
 # Start thread to generate ephID, hash, and shares every minute
 ephID_thread = threading.Thread(target=genEphIDHashShares, args=())
-ephID_thread.start()
+# ephID_thread.start()
 
 
 
@@ -560,8 +560,8 @@ def send_recv_threads():
     recv_broadcast_thread = threading.Thread(target=user_receive)
     recv_broadcast_thread.start()
 
-# Start sending shares and receiving them
-send_recv_threads()
+# # Start sending shares and receiving them
+# send_recv_threads()
 
 
 
@@ -650,7 +650,7 @@ def construct_encID(ephID):
     print(f"[ generate shared secret EncID: {encID} ]")
 
     # Now encode EncID into a bloom filter called Daily Bloom Filter (DBF) and delete the EncID
-    task6(encID)
+    #task6(encID)
 
     
 
@@ -839,15 +839,18 @@ def task8():
 
 
 
+############################## TASK 9 ##############################
+# Send QBF to backend server
+
 # Task 9: 9-A Show that the devices send the QBF to the back-end server. For extension, the back-end server is your own centralised server.
 # Task 9: 9-B Show that the devices are able to receive the result of risk analysis back from the back-end server. Show the result for a successful as well as an unsuccessful match. For extension, the back-end server is your own centralised server.
-def task9():
+def sendQBF():
     '''
     Sends QBF to back-end server
     Receives results from back-end server
     '''
     # Example showing how it works.
-    # daily_bloom_filter = BloomFilter()
+    daily_bloom_filter = BloomFilter()
     # new_DBF()
     daily_bloom_filter.add("howdy there partner", debug=True)
     assert "howdy there partner" in daily_bloom_filter
@@ -867,14 +870,20 @@ def task9():
     response = requests.post(url=url, json=data)
     data = response.json()
     
-    print("********** Task 9B: Show the devices are able to receive the result of the risk analysis **********")
-    print("********** Show the result for a successful as well as unsucessful match **********")
-    print(response)
-    print(data)
+    print("\n------------------> Segment 9 <------------------")
+    print("Uploading QBF to backend server...")
+    print(f"result: {data}")
 
+#task9()
+
+
+
+
+############################## TASK 10 ##############################
+# Upload CBF to server
 
 # Task 10: Show that a device can combine the available DBF into a CBF and upload the CBF to the back-end server. For extension, the back-end server is your own centralised server.
-def task10():
+def uploadCBF():
     '''
     Device can combine available DBF into CBF
     Device uploads the CBF to the backend server
@@ -897,18 +906,34 @@ def task10():
     response = requests.post(url=url, json=data)
     data = response.json()
     
-    print("********** Task 9B: Show the devices are able to receive the result of the risk analysis **********")
-    print("********** Show the result for a successful as well as unsucessful match **********")
-    print(response)
-    print(data)
+    print("\n------------------> Segment 10 <------------------")
+    print("uploading CBF to backend server...")
+    if (response.status_code == 200):
+        print("Upload CBF Success")
+    else:
+        print("Upload CBF Failure")
+
+    #TODO: ONCE A DEVICE UPLOADS A CBF, IT STOPS GENERATING QBF's
+
+
+
+
+############################## TASK 11 ##############################
+# Send QBF/Upload CBF to centralised server
 
 # Task 11: 11-A Show that the device is able to establish a TCP connection with the centralised server and perform Tasks 9 and 10 successfully.
 # Task 11: 11-B Show the terminal for the back-end server performing the QBF-CBF matching operation for risk analysis.
-def task11():
-    base_url = 'http://127.0.0.1:5000'
+def sendQBFCentralised():
+    '''
+    Sends QBF to centralised back-end server
+    Receives results from back-end server
+    '''
+    global server_url
 
     # Query QBF with centralized server
-    print("Task 11A: Querying centralized server with QBF")
+    print("\n------------------> Segment 11A <------------------")
+    print("Uploading QBF to centralised backend server...")
+    
     # new_DBF()
     daily_bloom_filter.add("howdy there partner")
     daily_bloom_filter.add("More text")
@@ -917,18 +942,24 @@ def task11():
     new_DBF()
     qbf = combine_bloom_filter()
     test_qbf = qbf.serialise()
-    url = f"{base_url}/query"
+    url = f"{server_url}/query"
     data = {
         'QBF': test_qbf
     }
     response = requests.post(url=url, json=data)
-    print("Result from the backend server: ")
     data = response.json()
-    print(data['result'])
+    print(f"result: {data['result']}")
 
+def uploadCBFCentralised():
+    '''
+    Device can combine available DBF into CBF
+    Device uploads the CBF to the centralised backend server
+    '''
     # Upload CBF to centralized server
-    print("Task 11A: Uploading CBF to centralized server")
-    url = f"{base_url}/upload"
+    print("\n------------------> Segment 11A <------------------")
+    print("uploading CBF to centralised backend server...")
+
+    url = f"{server_url}/upload"
     new_DBF()
     daily_bloom_filter.add("curse it all")
     stored_DBFs_checker()
@@ -937,7 +968,34 @@ def task11():
     data = {
         'CBF': test_cbf
     }
-    requests.post(url=url, json=data)
+    response = requests.post(url=url, json=data)
+
+    if (response.status_code == 200):
+        print("Upload CBF to Centralised Server Success")
+    else:
+        print("Upload CBF to Centralised Server Failure")
+
+    #TODO: ONCE A DEVICE UPLOADS A CBF, IT STOPS GENERATING QBF's
+
+
+
+
+if __name__ == "__main__":
+    # Start ephID thread
+    ephID_thread.start()
+    
+    # Start sending shares and receiving them
+    send_recv_threads()
+
+    while (True):
+        variable = input('')
+        if (variable == 'uploadCBF'):
+            uploadCBF()
+        elif (variable == 'uploadCBFCentralised'):
+            uploadCBFCentralised()
+
+
+
 
 # if __name__ == "__main__":
 #     new_DBF()
@@ -954,6 +1012,7 @@ def task11():
 #     task9()
 #     task10()
 #     task11()
+
 
 # def run_interactive():
 #     while True:
