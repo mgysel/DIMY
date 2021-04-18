@@ -83,7 +83,7 @@ def upload():
     ) 
 
 
-@APP.route('/match', methods=['POST'])
+@APP.route('/query', methods=['POST'])
 def match():
     '''
     Matches QBF with CBF

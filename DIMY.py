@@ -345,8 +345,8 @@ def genEphIDHashShares():
         time.sleep(60)
 
 # Start thread to generate ephID, hash, and shares every minute
-create_ephID = threading.Thread(target=genEphIDHashShares, args=())
-create_ephID.start()
+ephID_thread = threading.Thread(target=genEphIDHashShares, args=())
+ephID_thread.start()
 
 
 
@@ -511,7 +511,7 @@ def user_receive():
         if has_k_shares(3, hash_ephID):
             reconstruct_verify_ephID(hash_ephID)
 
-def start_send_recv_threads():
+def send_recv_threads():
     global server
     global client
     
@@ -533,8 +533,8 @@ def start_send_recv_threads():
     print("\n------------------> Segment 3 <------------------")
     # Create thread for user to broadcast chunks of the EphID
     message = ephID
-    send_broadcast = threading.Thread(target=user_send)
-    send_broadcast.start()
+    send_broadcast_thread = threading.Thread(target=user_send)
+    send_broadcast_thread.start()
 
     ########## RECEIVER ##########
 
@@ -548,11 +548,11 @@ def start_send_recv_threads():
     client.bind(("", 37025))
 
     # Create thread for user to receive broadcasts
-    receive_broadcast = threading.Thread(target=user_receive)
-    receive_broadcast.start()
+    recv_broadcast_thread = threading.Thread(target=user_receive)
+    recv_broadcast_thread.start()
 
 # Start sending shares and receiving them
-start_send_recv_threads()
+send_recv_threads()
 
 
 
@@ -873,7 +873,7 @@ def task11():
     new_DBF()
     qbf = combine_bloom_filter()
     test_qbf = qbf.serialise()
-    url = f"{base_url}/match"
+    url = f"{base_url}/query"
     data = {
         'QBF': test_qbf
     }
