@@ -58,8 +58,8 @@ def upload():
     Stores CBF in database
     '''
     data = request.get_json()
-    print("DATA: ")
-    print(data)
+    # print("DATA: ")
+    # print(data)
     cbf = data['CBF']
 
     cbf_json = {
@@ -71,7 +71,9 @@ def upload():
     coll = db['cbf']
     coll.insert_one(cbf_json)
 
-    print("Inserted cbf to backend server")
+    print("Received user CBF, stored in server.")
+
+    #TODO: Delete all after 21 days
 
     return make_response(
         dumps(
@@ -89,9 +91,11 @@ def match():
     Matches QBF with CBF
     '''
     data = request.get_json()
-    print("DATA: ")
-    print(data)
+    # print("DATA: ")
+    # print(data)
     qbf = data['QBF']
+
+    print("Received user QBF, matching with all CBF's in the database")
 
     result = is_user_positive(qbf)
 
