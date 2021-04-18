@@ -750,32 +750,37 @@ def combine_bloom_filter(qbf=None, dbfs=[], debug=False):
             print(qbf.__repr__)
     return qbf
 
+last_combine_run = time.time()
+
+def bloom_filter_combiner():
+    global last_combine_run
+    while True:
+        # NTS: Need more clarification.
+        one_day_passed()
+        last_combine_run = datetime.datetime().now()
+        combine_bloom_filter()
+        time.sleep(60 * 60)
+        # time.sleep(6 * 1)
+        
+
 def task8():
     global qbf
     # print("Show that after every 60 minutes, the devices combine all the available DBFs into a single QBF.")
 
     # one_day_passed()
-    def run_task8():
-        while True:
-            print("------------------> Segment 8 <------------------")
-            # NTS: Need more clarification.
-            one_day_passed()
-            qbf = combine_bloom_filter()
-            print(f"[ combine DBFs into a single QBF - {time.strftime('%Y-%m-%d:%H:%M:%S')} ]")
-            print(f"[ Currently have {len(DBF_list)} DBF, it's state: ", end="")
-            print("{", end="")
-            DBF_list[0].print_index()
-            print("} ]")
-            print("[ Single QBF: {", end="")
-            daily_bloom_filter.print_index()
-            print("} ]")
-            print(f"[ NEXT QUERY TIME - {(datetime.datetime.now() + datetime.timedelta(hours=1)).strftime('%Y-%m-%d:%H:%M:%S')} ]")
+    print("------------------> Segment 8 <------------------")
+    print(f"[ combine DBFs into a single QBF - {last_combine_run.strftime('%Y-%m-%d:%H:%M:%S')} ]")
+    print(f"[ Currently have {len(DBF_list)} DBF, it's state: ", end="")
+    print("{", end="")
+    DBF_list[0].print_index()
+    print("} ]")
+    print("[ Single QBF: {", end="")
+    daily_bloom_filter.print_index()
+    print("} ]")
+    print(f"[ NEXT QUERY TIME - {(last_combine_run + datetime.timedelta(hours=1)).strftime('%Y-%m-%d:%H:%M:%S')} ]")
 
-            time.sleep(60 * 60)
-            # time.sleep(6 * 1)
-    
-    task8_thread = threading.Thread(target=run_task8)
-    task8_thread.start()
+task8_thread = threading.Thread(target=bloom_filter_combiner)
+task8_thread.start()
 
 # Task 9: 9-A Show that the devices send the QBF to the back-end server. For extension, the back-end server is your own centralised server.
 # Task 9: 9-B Show that the devices are able to receive the result of risk analysis back from the back-end server. Show the result for a successful as well as an unsuccessful match. For extension, the back-end server is your own centralised server.
