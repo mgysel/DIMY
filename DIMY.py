@@ -46,6 +46,7 @@ class BloomFilter(object):
     hash_count = None
     bit_array = None
 
+    digests = []
     true_bits = []
 
     def __init__(self, size=800000, items_count=1000, fp_prob=0.0000062, num_hashes=3):
@@ -78,14 +79,14 @@ class BloomFilter(object):
         '''
         Add an item in the filter
         '''
-        digests = []
+        self.digests = []
         for i in range(self.hash_count):
 
             # create digest for given item.
             # i work as seed to mmh3.hash() function
             # With different seed, digest created is different
             digest = mmh3.hash(item, i) % self.size
-            digests.append(digest)
+            self.digests.append(digest)
 
             # set the bit True in bit_array
             self.bit_array[digest] = True
@@ -653,7 +654,7 @@ def task6(EncID=None):
     # daily_bloom_filter = BloomFilter(size=800000, items_count=1000, fp_prob=0.0000062, num_hashes=3)
     # new_DBF()
     
-    daily_bloom_filter.add(EncID, debug=True)
+    daily_bloom_filter.add(EncID)
     assert EncID in daily_bloom_filter
     #print(daily_bloom_filter)
     print("[ ======== insert into DBF (murmur3 hashing with 3 hashes) ]")
@@ -672,7 +673,7 @@ def list_EncID_to_DBF(DBF=None, EncID_list=None):
     if DBF:
         daily_bloom_filter = DBF
     for encid in EncID_list:
-        daily_bloom_filter.add(encid, debug=True)
+        daily_bloom_filter.add(encid)
 
 def stored_DBFs_checker():
     global DBF_list
@@ -695,6 +696,25 @@ def new_DBF():
     daily_bloom_filter = BloomFilter(size=800000, items_count=1000, fp_prob=0.0000062, num_hashes=3)
     # time.sleep(period)
 
+
+def EncID_to_DBF():
+    while True:
+# This should cover 7-A
+        EncID_list = []
+        end = randint(1, 10)
+        for i in range(end):
+            EncID_list.append(construct_encID(genEphID()))
+        list_EncID_to_DBF(EncID_list=EncID_list)
+
+def dbf_checker():
+# This should cover 7-B
+    while True:
+        stored_DBFs_checker()
+        # time.sleep(3)
+        time.sleep(60 * 10)
+        # print(daily_bloom_filter.__repr__)
+
+
 def task7():
     '''
     Show that the devices are encoding multiple EncIDs into the same DBF and show the state of the DBF after each addition.
@@ -706,23 +726,18 @@ def task7():
 
 # This should work...
     print("------------------> Segment 7 <------------------")
-    def run_task7():
-        while True:
-    # This should cover 7-A
-            EncID_list = []
-            end = randint(1, 10)
-            for i in range(end):
-                EncID_list.append(construct_encID(genEphID()))
-            list_EncID_to_DBF(EncID_list=EncID_list)
-
-    # This should cover 7-B
-            # time.sleep(60 * 10)
-            time.sleep(3)
-            stored_DBFs_checker()
-            print(daily_bloom_filter.__repr__)
+    print("[ Segment 7-A, insert EncID into DBF at positions: ", end="")
+    print(*daily_bloom_filter.digests, sep=", ", end="")
+    print("]")
+    print("[ current DBF state after inserting new EncID: ", end="")
+    print(*daily_bloom_filter.true_bits, sep=", ", end="")
+    print("]")
     
-    task7_thread = threading.Thread(target=run_task7)
-    task7_thread.start()
+task7a_thread = threading.Thread(target=EncID_to_DBF)
+task7a_thread.start()
+
+task7b_thread = threading.Thread(target=dbf_checker)
+task7b_thread.start()
 
 
 def one_day_passed():
@@ -745,7 +760,7 @@ def combine_bloom_filter(qbf=None, dbfs=[], debug=False):
     # if not DBF_list:
     #     DBF_list = dbfs
     for dbf in DBF_list:
-        qbf.union(dbf, inplace=True, debug=True)
+        qbf.union(dbf, inplace=True)
         if debug:
             print(qbf.__repr__)
     return qbf
