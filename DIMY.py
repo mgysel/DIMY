@@ -79,8 +79,6 @@ class BloomFilter(object):
         Add an item in the filter
         '''
         digests = []
-        if debug is True:
-            print("Changes: ", end="")
         for i in range(self.hash_count):
 
             # create digest for given item.
@@ -96,6 +94,9 @@ class BloomFilter(object):
             print("[ Segment 7-A, insert EncID into DBF at positions: ", end="")
             print(*digests, sep=", ", end="")
             print("]")
+            print("[ current DBF state after inserting new EncID: ", end="")
+            # Need index.
+            print(*self.bit_array, sep=", ", end="")
         
         self.curr_num += 1
 
@@ -672,10 +673,10 @@ def stored_DBFs_checker():
     global DBF_list
 
     if len(DBF_list) < 6:
-        DBF_list.append(daily_bloom_filter) if daily_bloom_filter else print("No bloom filter yet.")
+        DBF_list.append(daily_bloom_filter)
     else:
         DBF_list.pop(0)
-        DBF_list.append(daily_bloom_filter) if daily_bloom_filter else print("No bloom filter yet.")
+        DBF_list.append(daily_bloom_filter)
     # print(len(DBF_list))
 
 def erase_stored_DBFs():
@@ -684,7 +685,8 @@ def erase_stored_DBFs():
 
 def new_DBF():
     global daily_bloom_filter
-    stored_DBFs_checker()
+    if daily_bloom_filter:
+        stored_DBFs_checker()
     daily_bloom_filter = BloomFilter(size=800000, items_count=1000, fp_prob=0.0000062, num_hashes=3)
     # print(daily_bloom_filter)
     # time.sleep(period)
@@ -734,6 +736,7 @@ qbf = None
 
 def combine_bloom_filter(qbf=None, dbfs=[], debug=False):
     new_DBF()
+    qbf = daily_bloom_filter
     # qbf = BloomFilter() if not qbf else qbf
     # if not DBF_list:
     #     DBF_list = dbfs
@@ -769,8 +772,9 @@ def task9():
     Receives results from back-end server
     '''
     # Example showing how it works.
-    daily_bloom_filter = BloomFilter()
-    daily_bloom_filter.add("howdy there partner")
+    # daily_bloom_filter = BloomFilter()
+    new_DBF()
+    daily_bloom_filter.add("howdy there partner", debug=True)
     qbf = combine_bloom_filter()
     # test_qbf = base64.b64encode(b"Test QBF")
     qbf = qbf.serialise()
@@ -862,7 +866,7 @@ def task11():
     }
     requests.post(url=url, json=data)
 
-#task11()
+task9()
 
 # def run_interactive():
 #     while True:
