@@ -753,7 +753,8 @@ def one_day_passed():
 # Task 8: Show that after every 60 minutes, the devices combine all the available DBFs into a single QBF.
 qbf = None
 
-def combine_bloom_filter(qbf=None, dbfs=[], debug=False):
+def combine_bloom_filter(debug=False):
+    global qbf
     new_DBF()
     qbf = daily_bloom_filter
     # qbf = BloomFilter() if not qbf else qbf
