@@ -12,6 +12,7 @@ import base64
 import socket
 import time
 
+import datetime
 import binascii
 
 #import ecdsa
@@ -44,8 +45,8 @@ class BloomFilter(object):
     # k = how many times to hash
     hash_count = None
     bit_array = None
-    
-    curr_num = 0
+
+    true_bits = []
 
     def __init__(self, size=800000, items_count=1000, fp_prob=0.0000062, num_hashes=3):
         '''
@@ -72,7 +73,6 @@ class BloomFilter(object):
         # initialize all bits as 0
         self.bit_array.setall(0)
         
-        self.curr_num = 0
 
     def add(self, item, debug=False):
         '''
@@ -89,16 +89,18 @@ class BloomFilter(object):
 
             # set the bit True in bit_array
             self.bit_array[digest] = True
-            
+
+        self.true_bits.extend(digests)
+        
         if debug is True:
             print("[ Segment 7-A, insert EncID into DBF at positions: ", end="")
             print(*digests, sep=", ", end="")
             print("]")
             print("[ current DBF state after inserting new EncID: ", end="")
             # Need index.
-            print(*self.bit_array, sep=", ", end="")
+            print(*self.true_bits, sep=", ", end="")
+            print("]")
         
-        self.curr_num += 1
 
     def check(self, item):
         '''
@@ -263,9 +265,12 @@ class BloomFilter(object):
     def toString(self):
         return self.bit_array.to01()
     
-    def print(self):
-        print(self)
+    def print_index(self):
+        print(*self.true_bits, sep=", ", end="")
 
+    def get_indexes(self):
+        for bit in self.true_bits:
+            yield bit
 
 
 # Threading
@@ -646,7 +651,7 @@ def task6(EncID=None):
     # ! May need to move this to global depending on how everything flows.
     # instantiates bloom filter with n=1000, m=800000 bits and a false positive rate of p=0.0000062, k=3 hashes
     # daily_bloom_filter = BloomFilter(size=800000, items_count=1000, fp_prob=0.0000062, num_hashes=3)
-    new_DBF()
+    # new_DBF()
     
     daily_bloom_filter.add(EncID, debug=True)
     assert EncID in daily_bloom_filter
@@ -688,7 +693,6 @@ def new_DBF():
     if daily_bloom_filter:
         stored_DBFs_checker()
     daily_bloom_filter = BloomFilter(size=800000, items_count=1000, fp_prob=0.0000062, num_hashes=3)
-    # print(daily_bloom_filter)
     # time.sleep(period)
 
 def task7():
@@ -748,16 +752,25 @@ def combine_bloom_filter(qbf=None, dbfs=[], debug=False):
 
 def task8():
     global qbf
-    print("------------------> Segment 8 <------------------")
-    print("Show that after every 60 minutes, the devices combine all the available DBFs into a single QBF.")
+    # print("Show that after every 60 minutes, the devices combine all the available DBFs into a single QBF.")
 
     # one_day_passed()
     def run_task8():
         while True:
+            print("------------------> Segment 8 <------------------")
             # NTS: Need more clarification.
             one_day_passed()
             qbf = combine_bloom_filter()
-            print(qbf.__repr__)
+            print(f"[ combine DBFs into a single QBF - {time.strftime('%Y-%m-%d:%H:%M:%S')} ]")
+            print(f"[ Currently have {len(DBF_list)} DBF, it's state: ", end="")
+            print("{", end="")
+            DBF_list[0].print_index()
+            print("} ]")
+            print("[ Single QBF: {", end="")
+            daily_bloom_filter.print_index()
+            print("} ]")
+            print(f"[ NEXT QUERY TIME - {(datetime.datetime.now() + datetime.timedelta(hours=1)).strftime('%Y-%m-%d:%H:%M:%S')} ]")
+
             time.sleep(60 * 60)
             # time.sleep(6 * 1)
     
@@ -773,8 +786,9 @@ def task9():
     '''
     # Example showing how it works.
     # daily_bloom_filter = BloomFilter()
-    new_DBF()
+    # new_DBF()
     daily_bloom_filter.add("howdy there partner", debug=True)
+    assert "howdy there partner" in daily_bloom_filter
     qbf = combine_bloom_filter()
     # test_qbf = base64.b64encode(b"Test QBF")
     qbf = qbf.serialise()
@@ -804,7 +818,7 @@ def task10():
     Device uploads the CBF to the backend server
     '''
     # Example showing how it works.
-    daily_bloom_filter = BloomFilter()
+    # daily_bloom_filter = BloomFilter()
     daily_bloom_filter.add("howdy there partner")
     cbf = combine_bloom_filter()
     cbf = cbf.serialise()
@@ -826,9 +840,6 @@ def task10():
     print(response)
     print(data)
 
-#task10()
-task1()
-
 # Task 11: 11-A Show that the device is able to establish a TCP connection with the centralised server and perform Tasks 9 and 10 successfully.
 # Task 11: 11-B Show the terminal for the back-end server performing the QBF-CBF matching operation for risk analysis.
 def task11():
@@ -836,7 +847,7 @@ def task11():
 
     # Query QBF with centralized server
     print("Task 11A: Querying centralized server with QBF")
-    new_DBF()
+    # new_DBF()
     daily_bloom_filter.add("howdy there partner")
     daily_bloom_filter.add("More text")
     new_DBF()
@@ -866,7 +877,21 @@ def task11():
     }
     requests.post(url=url, json=data)
 
-task9()
+if __name__ == "__main__":
+    new_DBF()
+    print("======= created a new Contact BloomFilter (every 10 minutes will create a new one, maximum 6 CBFs) ======= ")
+
+    task1()
+    task2()
+    task3()
+    task4()
+    task5()
+    task6()
+    task7()
+    task8()
+    task9()
+    task10()
+    task11()
 
 # def run_interactive():
 #     while True:
