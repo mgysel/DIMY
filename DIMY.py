@@ -632,11 +632,13 @@ def reconstruct_verify_ephID(hash_ephID=None):
 
 # Task 5: 5-A Show the devices computing the shared secret EncID by using Diffie-Hellman key exchange mechanism.
 # Task 5: 5-B Show that the devices have arrived at the same EncID value.
+encID = None
 def construct_encID(ephID):
     '''
     Computes encID given an ephID
     '''
     global ecdh
+    global encID
 
     # Need to add 2 or 3 to the beginning of EphID
     ephID = bytes([2]) + ephID
@@ -767,11 +769,11 @@ def task7():
     print(*daily_bloom_filter.true_bits, sep=", ", end="")
     print("]")
     
-# task7a_thread = threading.Thread(target=EncID_to_DBF)
-# task7a_thread.start()
+task7a_thread = threading.Thread(target=EncID_to_DBF)
+task7a_thread.start()
 
-# task7b_thread = threading.Thread(target=dbf_checker)
-# task7b_thread.start()
+task7b_thread = threading.Thread(target=dbf_checker)
+task7b_thread.start()
 
 #task7()
 
@@ -833,8 +835,8 @@ def task8():
     print("} ]")
     print(f"[ NEXT QUERY TIME - {(last_combine_run + datetime.timedelta(hours=1)).strftime('%Y-%m-%d:%H:%M:%S')} ]")
 
-# task8_thread = threading.Thread(target=bloom_filter_combiner)
-# task8_thread.start()
+task8_thread = threading.Thread(target=bloom_filter_combiner)
+task8_thread.start()
 
 
 
