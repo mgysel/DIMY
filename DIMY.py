@@ -818,7 +818,7 @@ def sendQBF():
 
     url = 'http://ec2-3-26-37-172.ap-southeast-2.compute.amazonaws.com:9000/comp4337/qbf/query'
     data = {
-        'QBF': qbf.serialise()
+        'QBF': qbf
     }
 
     # f = open("qbf.json", "w")
