@@ -771,8 +771,9 @@ def bloom_filter_combiner():
     global last_combine_run
 
     while True:
-        time.sleep(60 * 1)
         # NTS: Need more clarification.
+        # time.sleep(60 * 60)
+        time.sleep(60 * 1)
         if DBF_list and daily_bloom_filter:
         # if daily_bloom_filter:
             print("\n------------------> Segment 8 <------------------")
@@ -788,10 +789,7 @@ def bloom_filter_combiner():
             last_combine_run = datetime.datetime.now()
             combine_bloom_filter()
             sendQBF()
-            # time.sleep(6 * 1)
-
 task8_thread = threading.Thread(target=bloom_filter_combiner)
-
 
 
 
