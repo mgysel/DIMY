@@ -745,7 +745,8 @@ def EncID_to_DBF():
         #     EncID_list.append(construct_encID(genEphID()))
         # list_EncID_to_DBF(EncID_list=EncID_list)
         add_encID_to_DBF()
-        time.sleep(60 * 10)
+        #time.sleep(60 * 10)
+        time.sleep(60 * 2)
 
 def dbf_checker():
 # This should cover 7-B
