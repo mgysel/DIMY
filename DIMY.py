@@ -815,11 +815,11 @@ def sendQBF():
     # assert "howdy there partner" in daily_bloom_filter
     # qbf = combine_bloom_filter()
     # # test_qbf = base64.b64encode(b"Test QBF")
-    qbf = qbf.serialise()
+    send_qbf = qbf.serialise()
 
     url = 'http://ec2-3-26-37-172.ap-southeast-2.compute.amazonaws.com:9000/comp4337/qbf/query'
     data = {
-        'QBF': qbf
+        'QBF': send_qbf
     }
 
     # f = open("qbf.json", "w")
@@ -890,6 +890,8 @@ def sendQBFCentralised():
     global server_url
     global qbf
 
+    send_qbf = qbf.serialise()
+
     # Query QBF with centralized server
     print("\n------------------> Segment 11A <------------------")
     print("Uploading QBF to centralised backend server...")
@@ -904,7 +906,7 @@ def sendQBFCentralised():
     # test_qbf = qbf.serialise()
     url = f"{server_url}/query"
     data = {
-        'QBF': qbf.serialise()
+        'QBF': send_qbf
     }
     response = requests.post(url=url, json=data)
     data = response.json()
