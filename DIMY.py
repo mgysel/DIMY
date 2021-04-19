@@ -789,8 +789,8 @@ def bloom_filter_combiner():
             last_combine_run = datetime.datetime.now()
             combine_bloom_filter()
             sendQBF()
-task8_thread = threading.Thread(target=bloom_filter_combiner)
 
+task8_thread = threading.Thread(target=bloom_filter_combiner)
 
 
 ############################## TASK 9 ##############################
