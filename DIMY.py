@@ -231,16 +231,18 @@ class BloomFilter(object):
         '''
         Returns a base64-serialised, string version of itself.
         '''
-        for i in range(4):
-            bit_array.append(0)
+        if len(self.bit_array) % 6 != 0:
+            for i in range(4):
+                self.bit_array.append(0)
         return bitarray.util.ba2base(64, bit_array)
     
     def serialise(self):
         '''
         Returns a base64-serialised, string version of itself.
         '''
-        for i in range(4):
-            self.bit_array.append(0)
+        if len(self.bit_array) % 6 != 0:
+            for i in range(4):
+                self.bit_array.append(0)
         return bitarray.util.ba2base(64, self.bit_array)
     
     @classmethod
@@ -773,9 +775,9 @@ def bloom_filter_combiner():
     while True:
         # NTS: Need more clarification.
         # time.sleep(60 * 60)
-        time.sleep(60 * 1)
         if DBF_list and daily_bloom_filter:
-        # if daily_bloom_filter:
+            time.sleep(60 * 1)
+
             print("\n------------------> Segment 8 <------------------")
             print(f"[ combine DBFs into a single QBF - {last_combine_run.strftime('%Y-%m-%d:%H:%M:%S')} ]")
             print(f"[ Currently have {len(DBF_list)} DBF, it's state: ", end="")
