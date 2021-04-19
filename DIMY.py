@@ -716,7 +716,7 @@ def stored_DBFs_checker():
     else:
         DBF_list.pop(0)
         DBF_list.append(daily_bloom_filter)
-    # print(len(DBF_list))
+    # print(DBF_list)
 
 def erase_stored_DBFs():
     global DBF_list
