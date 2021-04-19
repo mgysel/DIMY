@@ -832,7 +832,7 @@ def sendQBF():
     
     print("\n------------------> Segment 9 <------------------")
     print("Uploading QBF to backend server...")
-    print(f"result: {data}")
+    print(f"{data['result']}: {data['message']}")
 
 #task9()
 
@@ -911,7 +911,7 @@ def sendQBFCentralised():
     }
     response = requests.post(url=url, json=data)
     data = response.json()
-    print(f"result: {data['result']}")
+    print(f"{data['result']}")
 
 def uploadCBFCentralised():
     '''
@@ -933,7 +933,7 @@ def uploadCBFCentralised():
     }
     response = requests.post(url=url, json=data)
 
-    if (response.status_code == 200):
+    if (response.status_code == 201):
         print("Upload CBF to Centralised Server Success")
     else:
         print("Upload CBF to Centralised Server Failure")
