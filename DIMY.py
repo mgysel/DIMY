@@ -677,13 +677,13 @@ def task6(EncID):
     # daily_bloom_filter = BloomFilter(size=800000, items_count=1000, fp_prob=0.0000062, num_hashes=3)
     # new_DBF()
     
-    daily_bloom_filter.add(EncID)
-    assert EncID in daily_bloom_filter
+    # add_encID_to_DBF()
+    # assert EncID in daily_bloom_filter
     #print(daily_bloom_filter)
     print("[ ======== insert into DBF (murmur3 hashing with 3 hashes) ]")
 
     # Making local EncID = None
-    EncID = None
+    # EncID = None
     
     # global encID
     # EncID = None
@@ -709,10 +709,10 @@ def list_EncID_to_DBF(DBF=None, EncID_list=None):
 
 def add_encID_to_DBF():
     global encID
-    if encID and encID not in daily_bloom_filter:
+    if encID:
         daily_bloom_filter.add(encID)
-    del encID
-    encID = None
+        del encID
+        encID = None
 
 def stored_DBFs_checker():
     global DBF_list
@@ -745,6 +745,7 @@ def EncID_to_DBF():
         #     EncID_list.append(construct_encID(genEphID()))
         # list_EncID_to_DBF(EncID_list=EncID_list)
         add_encID_to_DBF()
+        time.sleep(60 * 10)
 
 def dbf_checker():
 # This should cover 7-B
