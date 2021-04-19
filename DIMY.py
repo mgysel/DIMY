@@ -711,6 +711,7 @@ def add_encID_to_DBF():
 def stored_DBFs_checker():
     global DBF_list
 
+
     if len(DBF_list) < 6:
         DBF_list.append(daily_bloom_filter)
     else:
@@ -724,9 +725,11 @@ def erase_stored_DBFs():
 
 def new_DBF():
     global daily_bloom_filter
+    print("\n------------------> Segment 7-B <------------------")
     if daily_bloom_filter:
         stored_DBFs_checker()
     daily_bloom_filter = BloomFilter(size=800000, items_count=1000, fp_prob=0.0000062, num_hashes=3)
+    print("\nNew DBF created")
     # time.sleep(period)
 
 
@@ -740,7 +743,7 @@ def dbf_checker():
 # This should cover 7-B
     while True:
         new_DBF()
-        time.sleep(3)
+        time.sleep(60)
         # time.sleep(60 * 10)
         # print(daily_bloom_filter.__repr__)
 
@@ -966,7 +969,7 @@ def uploadCBFCentralised():
 
     #TODO: ONCE A DEVICE UPLOADS A CBF, IT STOPS GENERATING QBF's
 
-task7a_thread = threading.Thread(target=EncID_to_DBF)
+# task7a_thread = threading.Thread(target=EncID_to_DBF)
 
 
 task7b_thread = threading.Thread(target=dbf_checker)
@@ -980,7 +983,7 @@ if __name__ == "__main__":
     # Start sending shares and receiving them
     send_recv_threads()
 
-    task7a_thread.start()
+    # task7a_thread.start()
     task7b_thread.start()
     
     task8_thread.start()
