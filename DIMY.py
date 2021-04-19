@@ -652,7 +652,7 @@ def construct_encID(ephID):
     print(f"[ generate shared secret EncID: {encID} ]")
 
     # Now encode EncID into a bloom filter called Daily Bloom Filter (DBF) and delete the EncID
-    #task6(encID)
+    task6(encID)
 
     
 
@@ -774,10 +774,9 @@ def task7():
     print("]")
     
 task7a_thread = threading.Thread(target=EncID_to_DBF)
-task7a_thread.start()
+
 
 task7b_thread = threading.Thread(target=dbf_checker)
-task7b_thread.start()
 
 #task7()
 
@@ -829,7 +828,6 @@ def task8():
     print(f"[ NEXT QUERY TIME - {(last_combine_run + datetime.timedelta(hours=1)).strftime('%Y-%m-%d:%H:%M:%S')} ]")
 
 task8_thread = threading.Thread(target=bloom_filter_combiner)
-task8_thread.start()
 
 
 
@@ -981,6 +979,12 @@ if __name__ == "__main__":
     
     # Start sending shares and receiving them
     send_recv_threads()
+
+    task7a_thread.start()
+    task7b_thread.start()
+    
+    task8_thread.start()
+
 
     while (True):
         variable = input('')
