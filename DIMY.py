@@ -282,7 +282,7 @@ from json import dumps
 
 server = None
 client = None
-server_url = 'http://127.0.0.1:5000'
+server_url = 'http://127.0.0.1:2111'
 
 
 
