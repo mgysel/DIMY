@@ -788,6 +788,8 @@ def bloom_filter_combiner():
             print(f"[ NEXT QUERY TIME - {(last_combine_run + datetime.timedelta(hours=1)).strftime('%Y-%m-%d:%H:%M:%S')} ]")
             last_combine_run = datetime.datetime.now()
             combine_bloom_filter()
+
+            # After bloom filter combined, send to backend
             sendQBF()
 
 task8_thread = threading.Thread(target=bloom_filter_combiner)
@@ -803,14 +805,16 @@ def sendQBF():
     Sends QBF to back-end server
     Receives results from back-end server
     '''
-    # Example showing how it works.
-    daily_bloom_filter = BloomFilter()
-    # new_DBF()
-    daily_bloom_filter.add("howdy there partner", debug=True)
-    assert "howdy there partner" in daily_bloom_filter
-    qbf = combine_bloom_filter()
-    # test_qbf = base64.b64encode(b"Test QBF")
-    qbf = qbf.serialise()
+    global qbf
+
+    # # Example showing how it works.
+    # daily_bloom_filter = BloomFilter()
+    # # new_DBF()
+    # daily_bloom_filter.add("howdy there partner", debug=True)
+    # assert "howdy there partner" in daily_bloom_filter
+    # qbf = combine_bloom_filter()
+    # # test_qbf = base64.b64encode(b"Test QBF")
+    # qbf = qbf.serialise()
 
     url = 'http://ec2-3-26-37-172.ap-southeast-2.compute.amazonaws.com:9000/comp4337/qbf/query'
     data = {
@@ -883,22 +887,23 @@ def sendQBFCentralised():
     Receives results from back-end server
     '''
     global server_url
+    global qbf
 
     # Query QBF with centralized server
     print("\n------------------> Segment 11A <------------------")
     print("Uploading QBF to centralised backend server...")
     
+    # # new_DBF()
+    # daily_bloom_filter.add("howdy there partner")
+    # daily_bloom_filter.add("More text")
     # new_DBF()
-    daily_bloom_filter.add("howdy there partner")
-    daily_bloom_filter.add("More text")
-    new_DBF()
-    daily_bloom_filter.add("wow, this is a lot of work")
-    new_DBF()
-    qbf = combine_bloom_filter()
-    test_qbf = qbf.serialise()
+    # daily_bloom_filter.add("wow, this is a lot of work")
+    # new_DBF()
+    # qbf = combine_bloom_filter()
+    # test_qbf = qbf.serialise()
     url = f"{server_url}/query"
     data = {
-        'QBF': test_qbf
+        'QBF': qbf
     }
     response = requests.post(url=url, json=data)
     data = response.json()
