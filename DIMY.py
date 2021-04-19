@@ -95,7 +95,7 @@ class BloomFilter(object):
         
         if debug is True:
             print("[ Segment 7-A, insert EncID into DBF at positions: ", end="")
-            print(*digests, sep=", ", end="")
+            print(*self.digests, sep=", ", end="")
             print("]")
             print("[ current DBF state after inserting new EncID: ", end="")
             # Need index.
@@ -785,8 +785,26 @@ def bloom_filter_combiner():
             print(f"[ NEXT QUERY TIME - {(last_combine_run + datetime.timedelta(hours=1)).strftime('%Y-%m-%d:%H:%M:%S')} ]")
             last_combine_run = datetime.datetime.now()
             combine_bloom_filter()
+            sendQBF()
             time.sleep(60 * 60)
-        # time.sleep(6 * 1)
+            # time.sleep(6 * 1)
+
+
+def task8():
+    global qbf
+    # print("Show that after every 60 minutes, the devices combine all the available DBFs into a single QBF.")
+
+    # one_day_passed()
+    print("\n------------------> Segment 8 <------------------")
+    print(f"[ combine DBFs into a single QBF - {last_combine_run.strftime('%Y-%m-%d:%H:%M:%S')} ]")
+    print(f"[ Currently have {len(DBF_list)} DBF, it's state: ", end="")
+    print("{", end="")
+    DBF_list[0].print_index()
+    print("} ]")
+    print("[ Single QBF: {", end="")
+    daily_bloom_filter.print_index()
+    print("} ]")
+    print(f"[ NEXT QUERY TIME - {(last_combine_run + datetime.timedelta(hours=1)).strftime('%Y-%m-%d:%H:%M:%S')} ]")
 
 task8_thread = threading.Thread(target=bloom_filter_combiner)
 
