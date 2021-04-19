@@ -814,7 +814,7 @@ def sendQBF():
     # assert "howdy there partner" in daily_bloom_filter
     # qbf = combine_bloom_filter()
     # # test_qbf = base64.b64encode(b"Test QBF")
-    # qbf = qbf.serialise()
+    qbf = qbf.serialise()
 
     url = 'http://ec2-3-26-37-172.ap-southeast-2.compute.amazonaws.com:9000/comp4337/qbf/query'
     data = {
