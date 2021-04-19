@@ -91,7 +91,7 @@ class BloomFilter(object):
             # set the bit True in bit_array
             self.bit_array[digest] = True
 
-        self.true_bits.extend(digests)
+        self.true_bits.extend(self.digests)
         
         if debug is True:
             print("[ Segment 7-A, insert EncID into DBF at positions: ", end="")
@@ -669,27 +669,20 @@ def task6(EncID):
     print("\n------------------> Segment 6 <------------------")
     global daily_bloom_filter
     
-    # This exists to get the EncID because the generation of the EncID itself isn't a separate function. Basically, just in case.
-    # EncID = construct_encID(genEphID())
-    
-    # ! May need to move this to global depending on how everything flows.
-    # instantiates bloom filter with n=1000, m=800000 bits and a false positive rate of p=0.0000062, k=3 hashes
-    # daily_bloom_filter = BloomFilter(size=800000, items_count=1000, fp_prob=0.0000062, num_hashes=3)
-    # new_DBF()
-    
-    # add_encID_to_DBF()
-    # assert EncID in daily_bloom_filter
-    #print(daily_bloom_filter)
+    add_encID_to_DBF()
+
     print("[ ======== insert into DBF (murmur3 hashing with 3 hashes) ]")
 
     # Making local EncID = None
     # EncID = None
-    
-    # global encID
-    # EncID = None
-    # if not encID:
-    #     encID = None
 
+    print("\n------------------> Segment 7 <------------------")
+    print("[ Segment 7-A, insert EncID into DBF at positions: ", end="")
+    print(*daily_bloom_filter.digests, sep=", ", end="")
+    print("]")
+    print("[ current DBF state after inserting new EncID: ", end="")
+    print(*daily_bloom_filter.true_bits, sep=", ", end="")
+    print("]")
 
 
 
@@ -701,6 +694,7 @@ def task6(EncID):
 DBF_list = []
 def list_EncID_to_DBF(DBF=None, EncID_list=None):
     global daily_bloom_filter
+    print("\n------------------> Segment 6 <------------------")
     print("[ ======== insert into DBF (murmur3 hashing with 3 hashes) ]")
     if DBF:
         daily_bloom_filter = DBF
@@ -739,21 +733,15 @@ def new_DBF():
 def EncID_to_DBF():
     while True:
 # This should cover 7-A
-        # EncID_list = []
-        # end = randint(1, 10)
-        # for i in range(end):
-        #     EncID_list.append(construct_encID(genEphID()))
-        # list_EncID_to_DBF(EncID_list=EncID_list)
-        add_encID_to_DBF()
-        #time.sleep(60 * 10)
-        time.sleep(60 * 2)
+        if daily_bloom_filter:
+            add_encID_to_DBF()
 
 def dbf_checker():
 # This should cover 7-B
     while True:
-        stored_DBFs_checker()
-        # time.sleep(3)
-        time.sleep(60 * 10)
+        new_DBF()
+        time.sleep(3)
+        # time.sleep(60 * 10)
         # print(daily_bloom_filter.__repr__)
 
 
@@ -764,7 +752,7 @@ def task7():
     '''
     # task6()
     # print(daily_bloom_filter)
-    print(daily_bloom_filter.__repr__)
+    # print(daily_bloom_filter.__repr__)
 
     print("------------------> Segment 7 <------------------")
     print("[ Segment 7-A, insert EncID into DBF at positions: ", end="")
@@ -774,10 +762,6 @@ def task7():
     print(*daily_bloom_filter.true_bits, sep=", ", end="")
     print("]")
     
-task7a_thread = threading.Thread(target=EncID_to_DBF)
-
-
-task7b_thread = threading.Thread(target=dbf_checker)
 
 #task7()
 
@@ -799,13 +783,24 @@ def combine_bloom_filter(debug=False):
             print(qbf.__repr__)
     return qbf
 
-last_combine_run = time.time()
+last_combine_run = datetime.datetime.now()
 
 def bloom_filter_combiner():
     global last_combine_run
     while True:
         # NTS: Need more clarification.
-        if daily_bloom_filter:
+        if DBF_list and daily_bloom_filter:
+        # if daily_bloom_filter:
+            print("------------------> Segment 8 <------------------")
+            print(f"[ combine DBFs into a single QBF - {last_combine_run.strftime('%Y-%m-%d:%H:%M:%S')} ]")
+            print(f"[ Currently have {len(DBF_list)} DBF, it's state: ", end="")
+            print("{", end="")
+            DBF_list[0].print_index()
+            print("} ]")
+            print("[ Single QBF: {", end="")
+            daily_bloom_filter.print_index()
+            print("} ]")
+            print(f"[ NEXT QUERY TIME - {(last_combine_run + datetime.timedelta(hours=1)).strftime('%Y-%m-%d:%H:%M:%S')} ]")
             last_combine_run = datetime.datetime.now()
             combine_bloom_filter()
             time.sleep(60 * 60)
@@ -971,6 +966,10 @@ def uploadCBFCentralised():
 
     #TODO: ONCE A DEVICE UPLOADS A CBF, IT STOPS GENERATING QBF's
 
+task7a_thread = threading.Thread(target=EncID_to_DBF)
+
+
+task7b_thread = threading.Thread(target=dbf_checker)
 
 
 
