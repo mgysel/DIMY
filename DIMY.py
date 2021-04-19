@@ -791,6 +791,7 @@ def bloom_filter_combiner():
 
             # After bloom filter combined, send to backend
             sendQBF()
+            sendQBFCentralised()
 
 task8_thread = threading.Thread(target=bloom_filter_combiner)
 
@@ -818,7 +819,7 @@ def sendQBF():
 
     url = 'http://ec2-3-26-37-172.ap-southeast-2.compute.amazonaws.com:9000/comp4337/qbf/query'
     data = {
-        'QBF': qbf.serialise()
+        'QBF': qbf
     }
 
     # f = open("qbf.json", "w")
@@ -848,7 +849,7 @@ def uploadCBF():
     '''
     # Example showing how it works.
     # daily_bloom_filter = BloomFilter()
-    daily_bloom_filter.add("howdy there partner")
+    # daily_bloom_filter.add("howdy there partner")
     cbf = combine_bloom_filter()
     cbf = cbf.serialise()
 
