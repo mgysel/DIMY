@@ -748,27 +748,6 @@ def dbf_checker():
         # print(daily_bloom_filter.__repr__)
 
 
-def task7():
-    '''
-    Show that the devices are encoding multiple EncIDs into the same DBF and show the state of the DBF after each addition.
-    Show that a new DBF gets created for the devices after every 10 minutes. A device can only store maximum of 6 DBFs.
-    '''
-    # task6()
-    # print(daily_bloom_filter)
-    # print(daily_bloom_filter.__repr__)
-
-    print("------------------> Segment 7 <------------------")
-    print("[ Segment 7-A, insert EncID into DBF at positions: ", end="")
-    print(*daily_bloom_filter.digests, sep=", ", end="")
-    print("]")
-    print("[ current DBF state after inserting new EncID: ", end="")
-    print(*daily_bloom_filter.true_bits, sep=", ", end="")
-    print("]")
-    
-
-#task7()
-
-
 # Task 8: Show that after every 60 minutes, the devices combine all the available DBFs into a single QBF.
 qbf = None
 
@@ -794,7 +773,7 @@ def bloom_filter_combiner():
         # NTS: Need more clarification.
         if DBF_list and daily_bloom_filter:
         # if daily_bloom_filter:
-            print("------------------> Segment 8 <------------------")
+            print("\n------------------> Segment 8 <------------------")
             print(f"[ combine DBFs into a single QBF - {last_combine_run.strftime('%Y-%m-%d:%H:%M:%S')} ]")
             print(f"[ Currently have {len(DBF_list)} DBF, it's state: ", end="")
             print("{", end="")
@@ -808,23 +787,6 @@ def bloom_filter_combiner():
             combine_bloom_filter()
             time.sleep(60 * 60)
         # time.sleep(6 * 1)
-        
-
-def task8():
-    global qbf
-    # print("Show that after every 60 minutes, the devices combine all the available DBFs into a single QBF.")
-
-    # one_day_passed()
-    print("------------------> Segment 8 <------------------")
-    print(f"[ combine DBFs into a single QBF - {last_combine_run.strftime('%Y-%m-%d:%H:%M:%S')} ]")
-    print(f"[ Currently have {len(DBF_list)} DBF, it's state: ", end="")
-    print("{", end="")
-    DBF_list[0].print_index()
-    print("} ]")
-    print("[ Single QBF: {", end="")
-    daily_bloom_filter.print_index()
-    print("} ]")
-    print(f"[ NEXT QUERY TIME - {(last_combine_run + datetime.timedelta(hours=1)).strftime('%Y-%m-%d:%H:%M:%S')} ]")
 
 task8_thread = threading.Thread(target=bloom_filter_combiner)
 
