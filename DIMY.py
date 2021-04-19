@@ -711,12 +711,18 @@ def add_encID_to_DBF():
 def stored_DBFs_checker():
     global DBF_list
 
+    print("\n------------------> Segment 7-B <------------------")
+
     if len(DBF_list) < 6:
         DBF_list.append(daily_bloom_filter)
+        print("New DBF created")
     else:
         DBF_list.pop(0)
         DBF_list.append(daily_bloom_filter)
+        print("New DBF created, old DBF deleted")
     # print(len(DBF_list))
+    
+    
 
 def erase_stored_DBFs():
     global DBF_list
