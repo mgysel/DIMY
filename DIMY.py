@@ -818,7 +818,7 @@ def sendQBF():
 
     url = 'http://ec2-3-26-37-172.ap-southeast-2.compute.amazonaws.com:9000/comp4337/qbf/query'
     data = {
-        'QBF': qbf
+        'QBF': qbf.serialise()
     }
 
     # f = open("qbf.json", "w")
@@ -903,7 +903,7 @@ def sendQBFCentralised():
     # test_qbf = qbf.serialise()
     url = f"{server_url}/query"
     data = {
-        'QBF': qbf
+        'QBF': qbf.serialise()
     }
     response = requests.post(url=url, json=data)
     data = response.json()
@@ -946,6 +946,8 @@ task7b_thread = threading.Thread(target=dbf_checker)
 if __name__ == "__main__":
     # Start ephID thread
     ephID_thread.start()
+
+    time.sleep(1)
     
     # Start sending shares and receiving them
     send_recv_threads()
