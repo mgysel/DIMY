@@ -19,8 +19,9 @@ class BloomFilter(object):
     # k = how many times to hash
     hash_count = None
     bit_array = None
-    
-    curr_num = 0
+
+    digests = []
+    true_bits = []
 
     def __init__(self, size=800000, items_count=1000, fp_prob=0.0000062, num_hashes=3):
         '''
@@ -47,30 +48,34 @@ class BloomFilter(object):
         # initialize all bits as 0
         self.bit_array.setall(0)
         
-        self.curr_num = 0
 
     def add(self, item, debug=False):
         '''
         Add an item in the filter
         '''
-        digests = []
-        if debug is True:
-            print("Changes: ", end="")
+        self.digests = []
         for i in range(self.hash_count):
 
             # create digest for given item.
             # i work as seed to mmh3.hash() function
             # With different seed, digest created is different
             digest = mmh3.hash(item, i) % self.size
-            digests.append(digest)
+            self.digests.append(digest)
 
             # set the bit True in bit_array
             self.bit_array[digest] = True
-            
-            if debug is True:
-                print(digest, end=" ")
+
+        self.true_bits.extend(self.digests)
         
-        self.curr_num += 1
+        if debug is True:
+            print("[ Segment 7-A, insert EncID into DBF at positions: ", end="")
+            print(*self.digests, sep=", ", end="")
+            print("]")
+            print("[ current DBF state after inserting new EncID: ", end="")
+            # Need index.
+            print(*self.true_bits, sep=", ", end="")
+            print("]")
+        
 
     def check(self, item):
         '''
@@ -200,16 +205,18 @@ class BloomFilter(object):
         '''
         Returns a base64-serialised, string version of itself.
         '''
-        for i in range(4):
-            bit_array.append(0)
+        if len(self.bit_array) % 6 != 0:
+            for i in range(4):
+                self.bit_array.append(0)
         return bitarray.util.ba2base(64, bit_array)
     
     def serialise(self):
         '''
         Returns a base64-serialised, string version of itself.
         '''
-        for i in range(4):
-            self.bit_array.append(0)
+        if len(self.bit_array) % 6 != 0:
+            for i in range(4):
+                self.bit_array.append(0)
         return bitarray.util.ba2base(64, self.bit_array)
     
     @classmethod
@@ -235,5 +242,9 @@ class BloomFilter(object):
     def toString(self):
         return self.bit_array.to01()
     
-    def print(self):
-        print(self)
+    def print_index(self):
+        print(*self.true_bits, sep=", ", end="")
+
+    def get_indexes(self):
+        for bit in self.true_bits:
+            yield bit
