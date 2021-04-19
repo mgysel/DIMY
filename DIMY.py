@@ -282,7 +282,7 @@ from json import dumps
 
 server = None
 client = None
-server_url = 'http://127.0.0.1:2111'
+server_url = 'http://127.0.0.1:5000'
 
 
 
@@ -775,10 +775,11 @@ def bloom_filter_combiner():
     while True:
         # NTS: Need more clarification.
         # time.sleep(60 * 60)
-        if DBF_list and daily_bloom_filter:
-            time.sleep(60 * 1)
+        if len(DBF_list) > 0 and daily_bloom_filter:
 
             print("\n------------------> Segment 8 <------------------")
+            last_combine_run = datetime.datetime.now()
+            combine_bloom_filter()
             print(f"[ combine DBFs into a single QBF - {last_combine_run.strftime('%Y-%m-%d:%H:%M:%S')} ]")
             print(f"[ Currently have {len(DBF_list)} DBF, it's state: ", end="")
             print("{", end="")
@@ -788,12 +789,11 @@ def bloom_filter_combiner():
             daily_bloom_filter.print_index()
             print("} ]")
             print(f"[ NEXT QUERY TIME - {(last_combine_run + datetime.timedelta(hours=1)).strftime('%Y-%m-%d:%H:%M:%S')} ]")
-            last_combine_run = datetime.datetime.now()
-            combine_bloom_filter()
 
             # After bloom filter combined, send to backend
             sendQBF()
             sendQBFCentralised()
+            time.sleep(60 * 1)
 
 task8_thread = threading.Thread(target=bloom_filter_combiner)
 
