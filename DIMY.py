@@ -771,6 +771,8 @@ def bloom_filter_combiner():
     global last_combine_run
     while True:
         # NTS: Need more clarification.
+        # time.sleep(60 * 60)
+        time.sleep(60 * 1)
         if DBF_list and daily_bloom_filter:
         # if daily_bloom_filter:
             print("\n------------------> Segment 8 <------------------")
@@ -786,28 +788,8 @@ def bloom_filter_combiner():
             last_combine_run = datetime.datetime.now()
             combine_bloom_filter()
             sendQBF()
-            time.sleep(60 * 60)
-            # time.sleep(6 * 1)
-
-
-def task8():
-    global qbf
-    # print("Show that after every 60 minutes, the devices combine all the available DBFs into a single QBF.")
-
-    # one_day_passed()
-    print("\n------------------> Segment 8 <------------------")
-    print(f"[ combine DBFs into a single QBF - {last_combine_run.strftime('%Y-%m-%d:%H:%M:%S')} ]")
-    print(f"[ Currently have {len(DBF_list)} DBF, it's state: ", end="")
-    print("{", end="")
-    DBF_list[0].print_index()
-    print("} ]")
-    print("[ Single QBF: {", end="")
-    daily_bloom_filter.print_index()
-    print("} ]")
-    print(f"[ NEXT QUERY TIME - {(last_combine_run + datetime.timedelta(hours=1)).strftime('%Y-%m-%d:%H:%M:%S')} ]")
 
 task8_thread = threading.Thread(target=bloom_filter_combiner)
-
 
 
 
