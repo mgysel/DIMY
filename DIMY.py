@@ -356,7 +356,7 @@ def genEphIDHashShares():
         time.sleep(60)
 
 # Start thread to generate ephID, hash, and shares every minute
-ephID_thread = threading.Thread(target=genEphIDHashShares, args=())
+ephID_thread = threading.Thread(target=genEphIDHashShares, args=(), name="Generates Epheremal ID from hash shares.")
 # ephID_thread.start()
 
 
@@ -544,7 +544,7 @@ def send_recv_threads():
     print("\n------------------> Segment 3 <------------------")
     # Create thread for user to broadcast chunks of the EphID
     message = ephID
-    send_broadcast_thread = threading.Thread(target=user_send)
+    send_broadcast_thread = threading.Thread(target=user_send, name="Sending Thread")
     send_broadcast_thread.start()
 
     ########## RECEIVER ##########
@@ -559,7 +559,7 @@ def send_recv_threads():
     client.bind(("", 37025))
 
     # Create thread for user to receive broadcasts
-    recv_broadcast_thread = threading.Thread(target=user_receive)
+    recv_broadcast_thread = threading.Thread(target=user_receive, name="Receiving Thread")
     recv_broadcast_thread.start()
 
 # # Start sending shares and receiving them
@@ -795,7 +795,6 @@ def bloom_filter_combiner():
             sendQBFCentralised()
             time.sleep(60 * 1)
 
-task8_thread = threading.Thread(target=bloom_filter_combiner)
 
 
 ############################## TASK 9 ##############################
@@ -944,8 +943,9 @@ def uploadCBFCentralised():
 # task7a_thread = threading.Thread(target=EncID_to_DBF)
 
 
-task7b_thread = threading.Thread(target=dbf_checker)
+task7b_thread = threading.Thread(target=dbf_checker, name="Ensures only 6 DBFs are stored at a time.")
 
+task8_thread = threading.Thread(target=bloom_filter_combiner, name="Task 8: Combine multiple DBFs into a single QBF.")
 
 
 if __name__ == "__main__":
