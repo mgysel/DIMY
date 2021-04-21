@@ -390,6 +390,7 @@ def user_send():
         # print(f"Sending share: {share}")
 
         server.sendto(share_bytes, ('<broadcast>', 37025))
+        # server.sendto(share_bytes, ('192.168.4.255', 37025))
 
         # Increment to next share
         if (i == 5):
@@ -799,7 +800,7 @@ def bloom_filter_combiner():
             # After bloom filter combined, send to backend
             sendQBF()
             sendQBFCentralised()
-            time.sleep(60 * 1)
+            time.sleep(60 * 2)
 
 
 
