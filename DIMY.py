@@ -7,6 +7,13 @@ import hashlib
 
 import base64
 
+# Threading
+import threading
+from json import dumps
+
+server = None
+client = None
+server_url = 'http://127.0.0.1:55000'
 
 # UDP Programming
 import socket
@@ -276,15 +283,6 @@ class BloomFilter(object):
             yield bit
 
 
-# Threading
-import threading
-from json import dumps
-
-server = None
-client = None
-server_url = 'http://127.0.0.1:5000'
-
-
 
 ############################## Task 1/2 ##############################
 # Every 60 seconds, generate new EphID and associated shares
@@ -486,7 +484,7 @@ def user_receive():
     '''
     global recv_shares
     recv_shares = []
-    hash_ephID = None
+    recv_hash_ephID = None
 
     while True:
         # Receive data
@@ -496,7 +494,7 @@ def user_receive():
         data_str = data.decode()
         share_num = int(data_str.split(',')[0].replace("(", ""))
         share_hex = data_str.split(', b')[1].split(',')[0].replace(")", "").replace(" ", "").replace("'", "")
-        hash_ephID = data_str.split(', b')[1].split(',')[1].replace(")", "").replace(" ", "").replace("'", "")
+        recv_hash_ephID = data_str.split(', b')[1].split(',')[1].replace(")", "").replace(" ", "").replace("'", "")
         # print("**** SHARE HEX *****")
         # print(share_hex)
         # print(hash_ephID)
@@ -504,23 +502,26 @@ def user_receive():
         share_bytes = binascii.unhexlify(share_hex)
         share = (share_num, share_bytes)
 
-        # print("********** Task 3B: Show the receiving of shares **********")
-        # print(f"Received Share: {share}")
-        
-        print(f"[ Segment 3-B, received share for hash {hash_ephID}: {share[1]} ]")
-        
-        # Add to shares
-        add_share(hash_ephID, share)
-        # print("********** SHARES DATA STRUCTURE **********")
-        # print(shares)
-        # print("********** Task 3C: Keeping track of shares received **********")
-        # print(f"Num unique shares received from sender: {num_shares_received(hash_ephID)}")
-        print(f"[ Segment 3-C, total shares received for hash {hash_ephID}: {num_shares_received(hash_ephID)} ]")
+        # Do not receive own share
+        if (recv_hash_ephID != hash_ephID):
 
-        # Task 4: If have 3 shares for that hash and ephID not reconstructed for that hash then
-        # reconstruct ephID and check hash
-        if has_k_shares(3, hash_ephID):
-            reconstruct_verify_ephID(hash_ephID)
+            # print("********** Task 3B: Show the receiving of shares **********")
+            # print(f"Received Share: {share}")
+            
+            print(f"[ Segment 3-B, received share for hash {recv_hash_ephID}: {share[1]} ]")
+            
+            # Add to shares
+            add_share(recv_hash_ephID, share)
+            # print("********** SHARES DATA STRUCTURE **********")
+            # print(shares)
+            # print("********** Task 3C: Keeping track of shares received **********")
+            # print(f"Num unique shares received from sender: {num_shares_received(hash_ephID)}")
+            print(f"[ Segment 3-C, total shares received for hash {recv_hash_ephID}: {num_shares_received(recv_hash_ephID)} ]")
+
+            # Task 4: If have 3 shares for that hash and ephID not reconstructed for that hash then
+            # reconstruct ephID and check hash
+            if has_k_shares(3, recv_hash_ephID):
+                reconstruct_verify_ephID(recv_hash_ephID)
 
 def send_recv_threads():
     global server
@@ -620,11 +621,13 @@ def reconstruct_verify_ephID(hash_ephID=None):
         print(f"[ Segment 4-A, re-construct EphID: {ephID} ]")
         print(f"[ Segment 4-B, hash value of re-constructed EphID: {hashlib.sha256(ephID).hexdigest()} is equal to hash value of original EphID: {hash_ephID}")
 
-        # Store ephID in shares variable
-        add_eph_id_to_shares(hash_ephID, ephID)
+        # Verify hashes equal before storing Ephemeral ID and computing Encounter ID
+        if (hashlib.sha256(ephID).hexdigest() == hash_ephID):
+            # Store ephID in shares variable
+            add_eph_id_to_shares(hash_ephID, ephID)
 
-        # Once we have reconstructed Ephemeral ID, compute the Encounter ID
-        construct_encID(ephID)
+            # Once we have reconstructed Ephemeral ID, compute the Encounter ID
+            construct_encID(ephID)
 
 
 
@@ -707,6 +710,7 @@ def add_encID_to_DBF():
     global encID
     if encID:
         daily_bloom_filter.add(encID)
+        # Deletes encounter ID after generated
         del encID
         encID = None
 

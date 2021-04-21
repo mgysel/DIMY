@@ -74,7 +74,7 @@ def upload():
     coll = db['cbf']
     coll.insert_one(cbf_json)
 
-    print("Received user CBF, stored in server.")
+    print("Received user CBF, stored in database.")
 
     #TODO: Delete all after 21 days
 
@@ -112,4 +112,4 @@ def match():
     ) 
 
 if __name__ == "__main__":
-    APP.run(port=(int(sys.argv[1]) if len(sys.argv) == 2 else 2110), debug=True)
+    APP.run(port=(int(sys.argv[1]) if len(sys.argv) == 2 else 55000), debug=True)
