@@ -674,9 +674,11 @@ def task6(EncID):
     print("\n------------------> Segment 6 <------------------")
     global daily_bloom_filter
     
+    # Add encID to DBF, delete encID
     add_encID_to_DBF()
 
     print("[ ======== insert into DBF (murmur3 hashing with 3 hashes) ]")
+    print("Encounter ID deleted")
 
     # Making local EncID = None
     # EncID = None
@@ -731,11 +733,10 @@ def erase_stored_DBFs():
 
 def new_DBF():
     global daily_bloom_filter
-    print("\n------------------> Segment 7-B <------------------")
+    print("\n------------------> Segment 7-B <------------------\nNew DBF created")
     if daily_bloom_filter:
         stored_DBFs_checker()
     daily_bloom_filter = BloomFilter(size=800000, items_count=1000, fp_prob=0.0000062, num_hashes=3)
-    print("\nNew DBF created")
     # time.sleep(period)
 
 
@@ -773,10 +774,11 @@ def combine_bloom_filter(debug=False):
 
 last_combine_run = datetime.datetime.now()
 
+gen_QBFs = True
 def bloom_filter_combiner():
     global last_combine_run
 
-    while True:
+    while gen_QBFs:
         # NTS: Need more clarification.
         # time.sleep(60 * 60)
         if len(DBF_list) > 0 and daily_bloom_filter:
@@ -852,6 +854,7 @@ def uploadCBF():
     Device can combine available DBF into CBF
     Device uploads the CBF to the backend server
     '''
+    global gen_QBFs
     # Example showing how it works.
     # daily_bloom_filter = BloomFilter()
     # daily_bloom_filter.add("howdy there partner")
@@ -874,10 +877,11 @@ def uploadCBF():
     print("uploading CBF to backend server...")
     if (response.status_code == 200):
         print("Upload CBF Success")
+        # Once a device uploads a CBF, it stops generating QBFs
+        gen_QBFs = False
     else:
         print("Upload CBF Failure")
 
-    #TODO: ONCE A DEVICE UPLOADS A CBF, IT STOPS GENERATING QBF's
 
 
 
@@ -922,6 +926,8 @@ def uploadCBFCentralised():
     Device can combine available DBF into CBF
     Device uploads the CBF to the centralised backend server
     '''
+    global gen_QBFs
+
     # Upload CBF to centralized server
     print("\n------------------> Segment 11A <------------------")
     print("uploading CBF to centralised backend server...")
@@ -939,6 +945,8 @@ def uploadCBFCentralised():
 
     if (response.status_code == 201):
         print("Upload CBF to Centralised Server Success")
+        # Once a device uploads a CBF, it stops generating QBFs
+        gen_QBFs = False
     else:
         print("Upload CBF to Centralised Server Failure")
 

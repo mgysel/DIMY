@@ -74,7 +74,8 @@ def upload():
     coll = db['cbf']
     coll.insert_one(cbf_json)
 
-    print("Received user CBF, stored in database.")
+    print("\n********************************************************")
+    print("Received user CBF, stored in database.\n")
 
     #TODO: Delete all after 21 days
 
@@ -98,9 +99,11 @@ def match():
     # print(data)
     qbf = data['QBF']
 
-    print("Received user QBF, matching with all CBF's in the database")
-
     result = is_user_positive(qbf)
+
+    print("\n********************************************************")
+    print("Received user QBF, matching with all CBF's in the database")
+    print(f"Were any matches found? {result}\n")
 
     return make_response(
         dumps(
