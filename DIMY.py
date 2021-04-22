@@ -636,16 +636,10 @@ def task6(EncID):
 # Task 7: 7-A Show that the devices are encoding multiple EncIDs into the same DBF and show the state of the DBF after each addition.
 # Task 7: 7-B Show that a new DBF gets created for the devices after every 10 minutes. A device can only store maximum of 6 DBFs.
 DBF_list = []
-def list_EncID_to_DBF(DBF=None, EncID_list=None):
-    global daily_bloom_filter
-    print("\n------------------> Segment 6 <------------------")
-    print("[ ======== insert into DBF (murmur3 hashing with 3 hashes) ]")
-    if DBF:
-        daily_bloom_filter = DBF
-    for encid in EncID_list:
-        daily_bloom_filter.add(encid)
 
 def add_encID_to_DBF():
+    """Adds received encounter ID to daily bloom filter and deletes the encounter ID.
+    """
     global encID
     if encID:
         daily_bloom_filter.add(encID)
@@ -654,9 +648,9 @@ def add_encID_to_DBF():
         encID = None
 
 def stored_DBFs_checker():
+    """Ensures the number of stored daily bloom filters doesn't exceed 6. If adding a daily bloom filter causes it to exceed 6, gets rid of oldest one thereby achieving FIFO.
+    """
     global DBF_list
-
-
     if len(DBF_list) < 6:
         DBF_list.append(daily_bloom_filter)
     else:
@@ -668,6 +662,8 @@ def erase_stored_DBFs():
     DBF_list = []
 
 def new_DBF():
+    """Creates a new daily bloom filter, adding the old one into the list of daily bloom filters if it exists.
+    """
     global daily_bloom_filter
     print("\n------------------> Segment 7-B <------------------\nNew DBF created")
     if daily_bloom_filter:
@@ -677,35 +673,37 @@ def new_DBF():
 
 
 def EncID_to_DBF():
+    """The function that is threaded to add encounter IDs to the daily bloom filter.
+    """
     while True:
         if daily_bloom_filter:
             add_encID_to_DBF()
 
 def dbf_checker():
     '''
-    Creates new DBF
+    The function that is threaded to add generate newdaily bloom filters. The name harks back to when it actually did check the stored daily bloom filters.
     '''
-# This should cover 7-B
     while True:
         new_DBF()
         time.sleep(60 * 10)
-        # time.sleep(60 * 10)
-        # print(daily_bloom_filter.__repr__)
-
-
 
 
 # Task 8: Show that after every 60 minutes, the devices combine all the available DBFs into a single QBF.
 qbf = None
 
 def combine_bloom_filter(debug=False):
+    """Originally used to create query bloom filters. Now used to create both query bloom filters and contact bloom filters. Combines the bloom filters that exist in the list and stores it in the global qbf.
+
+    Args:
+        debug (bool, optional): When true, prints a representation of the combined bloom filter. Defaults to False.
+
+    Returns:
+        qbf: The resultant combined bloom filter.
+    """
     global qbf
-    # new_DBF()
-    # qbf = daily_bloom_filter
+
     qbf = BloomFilter()
-    # qbf = BloomFilter() if not qbf else qbf
-    # if not DBF_list:
-    #     DBF_list = dbfs
+
     for dbf in DBF_list:
         qbf.union(dbf, inplace=True)
         if debug:
@@ -716,6 +714,8 @@ last_combine_run = datetime.datetime.now()
 
 gen_QBFs = True
 def bloom_filter_combiner():
+    """The function that is threaded to periodically combine bloom filters to query bloom filters and send the query bloom filter to the backend to check for matches.
+    """
     global last_combine_run
 
     combine_interval = 60
@@ -741,7 +741,6 @@ def bloom_filter_combiner():
             # After bloom filter combined, send to backend
             sendQBF()
             sendQBFCentralised()
-            #time.sleep(60 * combine_interval)
 
 
 
