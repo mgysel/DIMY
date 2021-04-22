@@ -46,8 +46,6 @@ You can also `chmod` DIMY.py (and server.py) so that it's executable by you or j
 python3 DIMY.py
 ```
 
-Please replace the text `<broadcast>` with an accessible ip address of the client you wish to have the device make "contact" with.
-
 Note that if you intend to use the raspberry pi as another client and you are connecting the client to the raspberry pi via the raspberry pi's network, you can comment out `server.sendto(share_bytes, ('<broadcast>', 37025))` and uncomment the line directly beneath it (`# server.sendto(share_bytes, ('192.168.4.255', 37025))`). This should result in the code looking like:
 
 ```python
@@ -57,7 +55,7 @@ server.sendto(share_bytes, ('192.168.4.255', 37025))
 
 ### Extension: Backend Server
 
-Don't forget to run the server too. The server currently assumes that it will be run on the same system that DIMY.py will. If running on a different device, change `server_url` in DIMY.py to the IPv4 address that server.py is running on.
+Don't forget to run the server too. The server currently assumes that it will be run on the same system that DIMY.py will. If running on a different device, change `server_url` in DIMY.py to the IPv4 address that server.py is running on. Also make sure the server_url in DIMY.py and server.py port numbers are consistent so that the computer or Raspberry Pi can communicate with the server.
 
 ```bash
 python3 server/server.py
