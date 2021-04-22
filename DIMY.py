@@ -34,7 +34,7 @@ import requests
 
 server = None
 client = None
-server_url = 'http://127.0.0.1:51001'
+server_url = 'http://127.0.0.1:2224'
 
 
 
@@ -690,7 +690,7 @@ def dbf_checker():
 # This should cover 7-B
     while True:
         new_DBF()
-        time.sleep(60 * 3)
+        time.sleep(60 * 10)
         # time.sleep(60 * 10)
         # print(daily_bloom_filter.__repr__)
 
@@ -720,12 +720,12 @@ gen_QBFs = True
 def bloom_filter_combiner():
     global last_combine_run
 
-    combine_interval = 18
+    combine_interval = 60
 
     while gen_QBFs:
         time.sleep(60 * combine_interval)
         # Generate QBF after each combine_interval
-        if len(DBF_list) > 0 and daily_bloom_filter:
+        if len(DBF_list) > 0 and daily_bloom_filter and gen_QBFs:
 
             print("\n------------------> Segment 8 <------------------")
             last_combine_run = datetime.datetime.now()
@@ -788,7 +788,10 @@ def uploadCBF():
     Device can combine available DBF into CBF
     Device uploads the CBF to the backend server
     '''
+    # Stop sending QBFs after upload CBF
     global gen_QBFs
+    gen_QBFs = False
+
     cbf = combine_bloom_filter()
     cbf = cbf.serialise()
 
@@ -804,8 +807,6 @@ def uploadCBF():
     print("uploading CBF to backend server...")
     if (response.status_code == 200):
         print("Upload CBF Success")
-        # Once a device uploads a CBF, it stops generating QBFs
-        gen_QBFs = False
     else:
         print("Upload CBF Failure")
 
@@ -844,11 +845,13 @@ def uploadCBFCentralised():
     Device can combine available DBF into CBF
     Device uploads the CBF to the centralised backend server
     '''
-    global gen_QBFs
-
     # Upload CBF to centralized server
     print("\n------------------> Segment 11A <------------------")
     print("uploading CBF to centralised backend server...")
+
+    # Stop sending QBFs after upload CBF
+    global gen_QBFs
+    gen_QBFs = False
 
     url = f"{server_url}/upload"
     new_DBF()
@@ -863,8 +866,6 @@ def uploadCBFCentralised():
 
     if (response.status_code == 201):
         print("Upload CBF to Centralised Server Success")
-        # Once a device uploads a CBF, it stops generating QBFs
-        gen_QBFs = False
     else:
         print("Upload CBF to Centralised Server Failure")
 
@@ -891,93 +892,10 @@ if __name__ == "__main__":
     # Combine DBFs thread
     combine_dbfs_thread.start()
 
-
     while (True):
         variable = input('')
         if (variable == 'uploadCBF'):
             uploadCBF()
+
         elif (variable == 'uploadCBFCentralised'):
             uploadCBFCentralised()
-
-
-
-
-# if __name__ == "__main__":
-#     new_DBF()
-#     print("======= created a new Contact BloomFilter (every 10 minutes will create a new one, maximum 6 CBFs) ======= ")
-
-#     task1()
-#     task2()
-#     task3()
-#     task4()
-#     task5()
-#     task6()
-#     task7()
-#     task8()
-#     task9()
-#     task10()
-#     task11()
-
-
-# def run_interactive():
-#     while True:
-#         try:
-#             num = input("Enter a number to run up to that task. Enter the function name to run only that function. EOF to end.\n")
-#             try:
-#                 for i, f in enumerate(tasks):
-#                     if num == f.__name__:
-#                         f()
-#             except:
-#                 num = int(num)
-#                 for i in range(num):
-#                     tasks[i]()
-#                     i += 1
-#         except EOFError:
-#             break
-
-# def handle_args():
-#     import argparse
-#     parser = argparse.ArgumentParser(description="Runner script for DIMY assignment")
-#     parser.add_argument("task", type=int, nargs="*", default=99, help="Task number to run.")
-#     parser.add_argument("--port", "-p", type=int, action="store", nargs=2, help="Port number to run client/server on.")
-#     parser.add_argument("--interactive", "-i", action="store_true", help="Determines whether to run the interactive mode or not.")
-
-#     args = parser.parse_args()
-
-#     if args.interactive:
-#         run_interactive()
-    
-#     return args.task, (args.port if args.port else None)
-
-# tasks = [
-#     task1,
-#     task2,
-#     task3,
-#     task4,
-#     task5,
-#     task6,
-#     task7,
-#     task8,
-#     task9,
-#     task10,
-#     task11,
-# ]
-
-# if __name__ == "__main__":
-#     task, empty = handle_args()
-
-#     if type(task) is not int and len(task) == 1:
-#         task = task[0]
-#     elif type(task) is not int:
-#         for i in task:
-#             tasks[i]()
-
-#     if task > len(tasks):
-#         for i, f in enumerate(tasks):
-#             f()
-#     else:
-#         i = 0
-#         while i < task:
-#             tasks[i]()
-#             i += 1
-#         # tasks[task - 1]()
