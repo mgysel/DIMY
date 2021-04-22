@@ -33,7 +33,7 @@ import requests
 
 server = None
 client = None
-server_url = 'http://127.0.0.1:2106'
+server_url = 'http://127.0.0.1:55000'
 
 
 
@@ -800,7 +800,6 @@ def uploadCBF():
     }
 
     response = requests.post(url=url, json=data)
-    data = response.json()
     
     print("\n------------------> Segment 10 <------------------")
     print("uploading CBF to backend server...")
@@ -894,6 +893,5 @@ if __name__ == "__main__":
         variable = input('')
         if (variable == 'uploadCBF'):
             uploadCBF()
-
         elif (variable == 'uploadCBFCentralised'):
             uploadCBFCentralised()
