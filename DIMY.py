@@ -350,8 +350,6 @@ def user_send():
     '''
     User broadcasts one share of the EphID every 10 seconds to another user
     '''
-    # # Determine Hash of EphID
-    # hash_ephID = hashlib.sha256(ephID).hexdigest()
 
     # # Determine shares of EphID
     # ephID_shares = genShares(ephID)
