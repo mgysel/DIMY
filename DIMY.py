@@ -13,7 +13,7 @@ from json import dumps
 
 server = None
 client = None
-server_url = 'http://127.0.0.1:55000'
+server_url = 'http://127.0.0.1:51000'
 
 # UDP Programming
 import socket
@@ -168,20 +168,6 @@ class BloomFilter(object):
         '''
         k = (m/n) * math.log(2)
         return int(k)
-    
-    # @classmethod
-    # def get_items_max(self, m, k):
-    #     '''
-    #     Return the maximum n that satisfies the formula
-    #     n = m * k
-
-    #     m : int
-    #         size of bit array
-    #     k : int
-    #         probability of false positive
-    #     '''
-    #     n = m * k
-    #     return int(n)
 
     def __and__(self, obj):
         '''
@@ -206,12 +192,6 @@ class BloomFilter(object):
         You shouldn't be using this. This is just to make it so that the class operates with Python's built in operators.
         '''
         return self.bit_array.to01()
-    
-    # def __repr__(self):
-    #     '''
-    #     You shouldn't be using this. This is just to make it so that the class operates with Python's built in operators.
-    #     '''
-    #     return f""
 
     def __eq__(self, obj):
         '''
@@ -281,6 +261,7 @@ class BloomFilter(object):
     def get_indexes(self):
         for bit in self.true_bits:
             yield bit
+
 
 
 
@@ -355,7 +336,6 @@ def genEphIDHashShares():
 
 # Start thread to generate ephID, hash, and shares every minute
 ephID_thread = threading.Thread(target=genEphIDHashShares, args=(), name="Generates Epheremal ID from hash shares.")
-# ephID_thread.start()
 
 
 
@@ -386,9 +366,6 @@ def user_send():
 
         print(f"\n[ Segment 3-A, sending share: {share[1]} ]")
 
-        # print("********** Task 3A: Show Sending of Shares at Rate of 1 per 10 seconds over UDP **********")
-        # print(f"Sending share: {share}")
-
         server.sendto(share_bytes, ('<broadcast>', 37025))
         # server.sendto(share_bytes, ('192.168.4.255', 37025))
 
@@ -407,19 +384,7 @@ def add_share(recv_hash, recv_share):
     '''
     Adds a share (share_num, share_bytes) to the global recv_shares variable
     '''
-    # Shares data structure should look like:
-    # shares = [
-    #     {
-    #         "hash": str,
-    #         "shares": [share1, share2, share3, etc.],
-    #         "ephID": None
-    #     }
-    # ]
     global recv_shares
-
-    # print("********** INSIDE ADD_SHARE **********")
-    # print(f"rec_hash: {rec_hash}")
-    # print(f"rec_share: {rec_share}")
 
     is_hash_in_shares = False
 
@@ -496,27 +461,16 @@ def user_receive():
         share_num = int(data_str.split(',')[0].replace("(", ""))
         share_hex = data_str.split(', b')[1].split(',')[0].replace(")", "").replace(" ", "").replace("'", "")
         recv_hash_ephID = data_str.split(', b')[1].split(',')[1].replace(")", "").replace(" ", "").replace("'", "")
-        # print("**** SHARE HEX *****")
-        # print(share_hex)
-        # print(hash_ephID)
-        # print(type(hash_ephID))
         share_bytes = binascii.unhexlify(share_hex)
         share = (share_num, share_bytes)
 
         # Do not receive own share
         if (recv_hash_ephID != hash_ephID):
-
-            # print("********** Task 3B: Show the receiving of shares **********")
-            # print(f"Received Share: {share}")
             
             print(f"[ Segment 3-B, received share for hash {recv_hash_ephID}: {share[1]} ]")
             
             # Add to shares
             add_share(recv_hash_ephID, share)
-            # print("********** SHARES DATA STRUCTURE **********")
-            # print(shares)
-            # print("********** Task 3C: Keeping track of shares received **********")
-            # print(f"Num unique shares received from sender: {num_shares_received(hash_ephID)}")
             print(f"[ Segment 3-C, total shares received for hash {recv_hash_ephID}: {num_shares_received(recv_hash_ephID)} ]")
 
             # Task 4: If have 3 shares for that hash and ephID not reconstructed for that hash then
@@ -564,9 +518,6 @@ def send_recv_threads():
     recv_broadcast_thread = threading.Thread(target=user_receive, name="Receiving Thread")
     recv_broadcast_thread.start()
 
-# # Start sending shares and receiving them
-# send_recv_threads()
-
 
 
 
@@ -607,16 +558,6 @@ def reconstruct_verify_ephID(hash_ephID=None):
     # when these have received at least 3 shares.
     if has_k_shares(3, hash_ephID):
         ephID = reconstruct_eph_id(hash_ephID)
-        # print("********** Task 4A: Show devices attempting re-construction of EphID when received at least 3 shares **********")
-        # print(f"Reconstructed EphID: {ephID}")
-
-        # Task 4: 4-B Show the devices verifying the re-constructed EphID by taking the hash of re-constructed EphID and 
-        # comparing with the hash value received in the advertisement.
-        # print("********** Task 4B: Verifying re-constructed EphID **********")
-        # print(f"Re-constructed EphID: {ephID}")
-        # print(f"Hash of re-constructed EphID: {hashlib.sha256(ephID).hexdigest()}")
-        # print(f"Received Hash of EphID: {hash_ephID}")
-        # print(f"Do they match? {hashlib.sha256(ephID).hexdigest() == hash_ephID}")
 
         print("\n------------------> Segment 4 <------------------")
         print(f"[ Segment 4-A, re-construct EphID: {ephID} ]")
@@ -654,7 +595,6 @@ def construct_encID(ephID):
     encID = ecdh.generate_sharedsecret_bytes()
 
     print("\n------------------> Segment 5 <------------------")
-    #print("********** Task 5A: Show the devices computing the shared secret EncID **********")
     print(f"[ generate shared secret EncID: {encID} ]")
 
     # Now encode EncID into a bloom filter called Daily Bloom Filter (DBF) and delete the EncID
@@ -680,9 +620,6 @@ def task6(EncID):
 
     print("[ ======== insert into DBF (murmur3 hashing with 3 hashes) ]")
     print("Encounter ID deleted")
-
-    # Making local EncID = None
-    # EncID = None
 
     print("\n------------------> Segment 7 <------------------")
     print("[ Segment 7-A, insert EncID into DBF at positions: ", end="")
@@ -726,7 +663,6 @@ def stored_DBFs_checker():
     else:
         DBF_list.pop(0)
         DBF_list.append(daily_bloom_filter)
-    # print(DBF_list)
 
 def erase_stored_DBFs():
     global DBF_list
@@ -743,7 +679,6 @@ def new_DBF():
 
 def EncID_to_DBF():
     while True:
-# This should cover 7-A
         if daily_bloom_filter:
             add_encID_to_DBF()
 
@@ -751,9 +686,11 @@ def dbf_checker():
 # This should cover 7-B
     while True:
         new_DBF()
-        time.sleep(60)
+        time.sleep(60 * 2)
         # time.sleep(60 * 10)
         # print(daily_bloom_filter.__repr__)
+
+
 
 
 # Task 8: Show that after every 60 minutes, the devices combine all the available DBFs into a single QBF.
@@ -780,8 +717,6 @@ def bloom_filter_combiner():
     global last_combine_run
 
     while gen_QBFs:
-        # NTS: Need more clarification.
-        # time.sleep(60 * 60)
         if len(DBF_list) > 0 and daily_bloom_filter:
 
             print("\n------------------> Segment 8 <------------------")
@@ -800,7 +735,8 @@ def bloom_filter_combiner():
             # After bloom filter combined, send to backend
             sendQBF()
             sendQBFCentralised()
-            time.sleep(60 * 2)
+            time.sleep(60 * 12)
+
 
 
 
@@ -816,13 +752,6 @@ def sendQBF():
     '''
     global qbf
 
-    # # Example showing how it works.
-    # daily_bloom_filter = BloomFilter()
-    # # new_DBF()
-    # daily_bloom_filter.add("howdy there partner", debug=True)
-    # assert "howdy there partner" in daily_bloom_filter
-    # qbf = combine_bloom_filter()
-    # # test_qbf = base64.b64encode(b"Test QBF")
     send_qbf = qbf.serialise()
 
     url = 'http://ec2-3-26-37-172.ap-southeast-2.compute.amazonaws.com:9000/comp4337/qbf/query'
@@ -830,18 +759,14 @@ def sendQBF():
         'QBF': send_qbf
     }
 
-    # f = open("qbf.json", "w")
-    # f.write(data)
-    # f.close()
-
     response = requests.post(url=url, json=data)
     data = response.json()
     
-    print("\n------------------> Segment 9 <------------------")
-    print("Uploading QBF to backend server...")
-    print(f"{data['result']}: {data['message']}")
-
-#task9()
+    print(f'''
+    \n------------------> Segment 9 <------------------\n
+    Uploading QBF to backend server...
+    {data['result']}: {data['message']}
+    ''')
 
 
 
@@ -856,9 +781,6 @@ def uploadCBF():
     Device uploads the CBF to the backend server
     '''
     global gen_QBFs
-    # Example showing how it works.
-    # daily_bloom_filter = BloomFilter()
-    # daily_bloom_filter.add("howdy there partner")
     cbf = combine_bloom_filter()
     cbf = cbf.serialise()
 
@@ -866,10 +788,6 @@ def uploadCBF():
     data = {
         'CBF': cbf
     }
-
-    # f = open("qbf.json", "w")
-    # f.write(data)
-    # f.close()
 
     response = requests.post(url=url, json=data)
     data = response.json()
@@ -882,7 +800,6 @@ def uploadCBF():
         gen_QBFs = False
     else:
         print("Upload CBF Failure")
-
 
 
 
@@ -906,14 +823,6 @@ def sendQBFCentralised():
     print("\n------------------> Segment 11A <------------------")
     print("Uploading QBF to centralised backend server...")
     
-    # # new_DBF()
-    # daily_bloom_filter.add("howdy there partner")
-    # daily_bloom_filter.add("More text")
-    # new_DBF()
-    # daily_bloom_filter.add("wow, this is a lot of work")
-    # new_DBF()
-    # qbf = combine_bloom_filter()
-    # test_qbf = qbf.serialise()
     url = f"{server_url}/query"
     data = {
         'QBF': send_qbf
@@ -951,14 +860,10 @@ def uploadCBFCentralised():
     else:
         print("Upload CBF to Centralised Server Failure")
 
-    #TODO: ONCE A DEVICE UPLOADS A CBF, IT STOPS GENERATING QBF's
-
-# task7a_thread = threading.Thread(target=EncID_to_DBF)
-
 
 task7b_thread = threading.Thread(target=dbf_checker, name="Ensures only 6 DBFs are stored at a time.")
 
-task8_thread = threading.Thread(target=bloom_filter_combiner, name="Task 8: Combine multiple DBFs into a single QBF.")
+combine_dbfs_thread = threading.Thread(target=bloom_filter_combiner, name="Task 8: Combine multiple DBFs into a single QBF.")
 
 
 if __name__ == "__main__":
@@ -973,7 +878,8 @@ if __name__ == "__main__":
     # task7a_thread.start()
     task7b_thread.start()
     
-    task8_thread.start()
+    # Combine DBFs
+    combine_dbfs_thread.start()
 
 
     while (True):
