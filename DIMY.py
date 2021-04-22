@@ -5,8 +5,10 @@ from Crypto.Random import get_random_bytes
 from Crypto.Protocol.SecretSharing import Shamir
 import hashlib
 import base64
+
 # Threading
 import threading
+
 from json import dumps
 
 # UDP Programming
@@ -16,17 +18,14 @@ import time
 import datetime
 import binascii
 
-#import ecdsa
 from ecdsa import ECDH, SECP128r1, VerifyingKey
-#from ecdh import ECDH
 
 # bloom filter library
-# from bloom_filter import BloomFilter
-# from pybloomfilter import BloomFilter
 import bitarray
 import bitarray.util
 import mmh3
 import math
+
 from Crypto.Random.random import getrandbits
 from random import randint
 
@@ -121,7 +120,6 @@ class BloomFilter(object):
         '''
         Returns intersection/bitwise AND of the current and other_bloom_filter. inplace defaults to False. Not a true inplace operation. Just replaces the internal bitarray.
         '''
-        # new_bit_array = bitarray(self.size)
         new_bit_array = self.bit_array & other_bloom_filter.bit_array
         if debug:
             print(new_bit_array.__repr__)
@@ -133,7 +131,6 @@ class BloomFilter(object):
         '''
         Returns union/bitwise OR of the current and other_bloom_filter. inplace defaults to False. Not a true inplace operation. Just replaces the internal bitarray.
         '''
-        # new_bit_array = bitarray(self.size)
         new_bit_array = self.bit_array | other_bloom_filter.bit_array
         if debug:
             print(new_bit_array.__repr__)
@@ -207,10 +204,6 @@ class BloomFilter(object):
         for i in range(self.hash_count):
             digest = mmh3.hash(item, i) % self.size
             if self.bit_array[digest] == False:
-
-                # if any of bit is False then,its not present
-                # in filter
-                # else there is probability that it exist
                 return False
         return True
 
@@ -254,9 +247,16 @@ class BloomFilter(object):
         return bf
     
     def toString(self):
+        """Returns a string of 0s and 1s that represent the bitarray's contents
+
+        Returns:
+            string: string of 0s and 1s
+        """
         return self.bit_array.to01()
     
     def print_index(self):
+        """Used to simplify the printing of the indexes of true bits
+        """
         print(*self.true_bits, sep=", ", end="")
 
     def get_indexes(self):
