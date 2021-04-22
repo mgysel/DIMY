@@ -61,8 +61,6 @@ def upload():
     Stores CBF in database
     '''
     data = request.get_json()
-    # print("DATA: ")
-    # print(data)
     cbf = data['CBF']
 
     cbf_json = {
@@ -76,8 +74,6 @@ def upload():
 
     print("\n********************************************************")
     print("Received user CBF, stored in database.\n")
-
-    #TODO: Delete all after 21 days
 
     return make_response(
         dumps(
@@ -95,8 +91,6 @@ def match():
     Matches QBF with CBF
     '''
     data = request.get_json()
-    # print("DATA: ")
-    # print(data)
     qbf = data['QBF']
 
     result = is_user_positive(qbf)
@@ -115,4 +109,4 @@ def match():
     ) 
 
 if __name__ == "__main__":
-    APP.run(port=(int(sys.argv[1]) if len(sys.argv) == 2 else 55000), debug=True)
+    APP.run(port=(int(sys.argv[1]) if len(sys.argv) == 2 else 2106), debug=True)

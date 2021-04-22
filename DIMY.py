@@ -33,7 +33,7 @@ import requests
 
 server = None
 client = None
-server_url = 'http://127.0.0.1:55000'
+server_url = 'http://127.0.0.1:2106'
 
 
 
@@ -351,8 +351,7 @@ def user_send():
     User broadcasts one share of the EphID every 10 seconds to another user
     '''
 
-    # # Determine shares of EphID
-    # ephID_shares = genShares(ephID)
+    # Determine shares of EphID
     global ephID
     global hash_ephID
     global send_shares
@@ -365,7 +364,9 @@ def user_send():
 
         print(f"\n[ Segment 3-A, sending share: {share[1]} ]")
 
+        # NOTE: Use for Laptop broadcasts
         server.sendto(share_bytes, ('<broadcast>', 37025))
+        # NOTE: Use for Raspberry Pi broadcasts
         # server.sendto(share_bytes, ('192.168.4.255', 37025))
 
         # Increment to next share
@@ -669,7 +670,6 @@ def new_DBF():
     if daily_bloom_filter:
         stored_DBFs_checker()
     daily_bloom_filter = BloomFilter(size=800000, items_count=1000, fp_prob=0.0000062, num_hashes=3)
-    # time.sleep(period)
 
 
 def EncID_to_DBF():
@@ -685,7 +685,7 @@ def dbf_checker():
     '''
     while True:
         new_DBF()
-        time.sleep(60 * 10)
+        time.sleep(60 * 1)
 
 
 # Task 8: Show that after every 60 minutes, the devices combine all the available DBFs into a single QBF.
@@ -718,7 +718,7 @@ def bloom_filter_combiner():
     """
     global last_combine_run
 
-    combine_interval = 60
+    combine_interval = 2
 
     while gen_QBFs:
         time.sleep(60 * combine_interval)
@@ -865,9 +865,9 @@ def uploadCBFCentralised():
     else:
         print("Upload CBF to Centralised Server Failure")
 
-
+# Thread for creating new dbfs
 new_dbf_thread = threading.Thread(target=dbf_checker, name="Ensures only 6 DBFs are stored at a time.")
-
+# Thread for combining dbfs
 combine_dbfs_thread = threading.Thread(target=bloom_filter_combiner, name="Task 8: Combine multiple DBFs into a single QBF.")
 
 
