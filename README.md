@@ -4,7 +4,7 @@ A simplified implementation of DIMY.
 
 ## Requirements
 
-- Python 3
+- Python 3 (assuming 3.6+)
 - Python PIP
 
 ## How to Install
@@ -38,8 +38,14 @@ python3 -m pip install ./dist/ecdsa*.whl
 
 ## Run
 
-Can `chmod` DIMY.py so that it's executable by you or just run the below.
+You can also `chmod` DIMY.py (and server.py) so that it's executable by you or just run the below.
 
 ```bash
 python3 DIMY.py
+```
+
+Don't forget to run the server too. The server currently assumes that it will be run on the same system that DIMY.py will. If running on a different device, change `server_url` in DIMY.py to the IPv4 address that server.py is running on.
+
+```bash
+python3 server/server.py
 ```
