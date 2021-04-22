@@ -861,7 +861,7 @@ def uploadCBFCentralised():
         print("Upload CBF to Centralised Server Failure")
 
 
-task7b_thread = threading.Thread(target=dbf_checker, name="Ensures only 6 DBFs are stored at a time.")
+new_dbf_thread = threading.Thread(target=dbf_checker, name="Ensures only 6 DBFs are stored at a time.")
 
 combine_dbfs_thread = threading.Thread(target=bloom_filter_combiner, name="Task 8: Combine multiple DBFs into a single QBF.")
 
@@ -875,10 +875,10 @@ if __name__ == "__main__":
     # Start sending shares and receiving them
     send_recv_threads()
 
-    # task7a_thread.start()
-    task7b_thread.start()
+    # New dbf thread
+    new_dbf_thread.start()
     
-    # Combine DBFs
+    # Combine DBFs thread
     combine_dbfs_thread.start()
 
 
