@@ -684,8 +684,9 @@ def dbf_checker():
     The function that is threaded to add generate newdaily bloom filters. The name harks back to when it actually did check the stored daily bloom filters.
     '''
     while True:
+        # New dbf every 10 minutes
         new_DBF()
-        time.sleep(60 * 1)
+        time.sleep(60 * 10)
 
 
 # Task 8: Show that after every 60 minutes, the devices combine all the available DBFs into a single QBF.
@@ -718,7 +719,8 @@ def bloom_filter_combiner():
     """
     global last_combine_run
 
-    combine_interval = 2
+    # Combine every 60 minutes
+    combine_interval = 60
 
     while gen_QBFs:
         time.sleep(60 * combine_interval)
