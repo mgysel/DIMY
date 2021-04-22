@@ -885,6 +885,8 @@ if __name__ == "__main__":
 
     # New dbf thread
     new_dbf_thread.start()
+
+    time.sleep(2)
     
     # Combine DBFs thread
     combine_dbfs_thread.start()
