@@ -4,16 +4,10 @@
 from Crypto.Random import get_random_bytes
 from Crypto.Protocol.SecretSharing import Shamir
 import hashlib
-
 import base64
-
 # Threading
 import threading
 from json import dumps
-
-server = None
-client = None
-server_url = 'http://127.0.0.1:51000'
 
 # UDP Programming
 import socket
@@ -38,7 +32,14 @@ from random import randint
 
 import requests
 
-# Nicked the base from https://www.geeksforgeeks.org/bloom-filters-introduction-and-python-implementation/
+server = None
+client = None
+server_url = 'http://127.0.0.1:51001'
+
+
+
+
+##### Bloom Filter Implementation references https://www.geeksforgeeks.org/bloom-filters-introduction-and-python-implementation/
 class BloomFilter(object):
     '''
     Class for Bloom filter, using murmur3 hash function
@@ -683,10 +684,13 @@ def EncID_to_DBF():
             add_encID_to_DBF()
 
 def dbf_checker():
+    '''
+    Creates new DBF
+    '''
 # This should cover 7-B
     while True:
         new_DBF()
-        time.sleep(60 * 2)
+        time.sleep(60 * 3)
         # time.sleep(60 * 10)
         # print(daily_bloom_filter.__repr__)
 
@@ -716,7 +720,11 @@ gen_QBFs = True
 def bloom_filter_combiner():
     global last_combine_run
 
+    combine_interval = 18
+
     while gen_QBFs:
+        time.sleep(60 * combine_interval)
+        # Generate QBF after each combine_interval
         if len(DBF_list) > 0 and daily_bloom_filter:
 
             print("\n------------------> Segment 8 <------------------")
@@ -735,7 +743,7 @@ def bloom_filter_combiner():
             # After bloom filter combined, send to backend
             sendQBF()
             sendQBFCentralised()
-            time.sleep(60 * 12)
+            #time.sleep(60 * combine_interval)
 
 
 
