@@ -852,7 +852,6 @@ def uploadCBFCentralised():
 
     url = f"{server_url}/upload"
     new_DBF()
-    daily_bloom_filter.add("curse it all")
     stored_DBFs_checker()
     test_cbf = combine_bloom_filter()
     test_cbf = test_cbf.serialise()
