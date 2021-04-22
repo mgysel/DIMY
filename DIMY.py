@@ -34,7 +34,7 @@ import requests
 
 server = None
 client = None
-server_url = 'http://127.0.0.1:2224'
+server_url = 'http://127.0.0.1:55000'
 
 
 
