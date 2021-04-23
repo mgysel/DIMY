@@ -41,6 +41,8 @@ python3 -m pip install ./dist/ecdsa*.whl
 
 ### Clients
 
+Copy the DIMY.py file to each device you want to act as a client.
+
 You can also `chmod` DIMY.py (and server.py) so that it's executable by you or just run the below.
 
 ```bash
