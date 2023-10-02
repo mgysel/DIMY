@@ -1,7 +1,10 @@
 # DIMY - Did I Meet You
 
 ## Project Description
-DIMY is a privacy-preserving contact tracing application that generates and shares ephemeral identifiers using Shamir’s Secret Sharing and Elliptic Curve Diffie-Hellman, and stores and checks COVID-positive contacts in bloom filters on Hyperledger. An in-depth discussion of the project can be found in `DIMY Final Report.pdf` and `DIMY Final Presentation.pdf`.
+DIMY is a privacy-preserving contact tracing application that generates and shares ephemeral identifiers using Shamir’s Secret Sharing and Elliptic Curve Diffie-Hellman, and stores and checks COVID-positive contacts in bloom filters on Hyperledger. An in-depth discussion of the project can be found in `DIMY Final Report.pdf` and `DIMY Final Presentation.pdf`, and a demo video can be found below.
+
+### Demo Video
+[![Watch the video](https://img.youtube.com/vi/<VIDEO_ID>/hqdefault.jpg)](https://www.youtube.com/embed/zEjG_Cpm1y0)
 
 ## Requirements
 
