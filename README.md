@@ -6,6 +6,9 @@ DIMY is a privacy-preserving contact tracing application that generates and shar
 ### Demo Video
 [![Watch the video](https://img.youtube.com/vi/zEjG_Cpm1y0/hqdefault.jpg)](https://www.youtube.com/embed/zEjG_Cpm1y0)
 
+[<img src="https://img.youtube.com/vi/zEjG_Cpm1y0/hqdefault.jpg" width="600" height="300"
+/>](https://www.youtube.com/embed/zEjG_Cpm1y0)
+
 ## Requirements
 
 - Python 3 (assuming 3.6+)
